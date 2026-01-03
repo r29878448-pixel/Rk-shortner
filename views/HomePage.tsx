@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { ChevronRight, Copy, Check, ExternalLink, Loader2, Zap, Shield } from 'lucide-react';
+import { ChevronRight, Copy, Check, Loader2, Zap, Shield } from 'lucide-react';
 import { Link as LinkType } from '../types.ts';
 
 interface HomePageProps {
@@ -13,6 +13,15 @@ const HomePage: React.FC<HomePageProps> = ({ siteName }) => {
   const [isCopied, setIsCopied] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
+  const generateLongCode = () => {
+    const chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+    let result = '';
+    for (let i = 0; i < 14; i++) {
+      result += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    return result;
+  };
+
   const handleShorten = (e: React.FormEvent) => {
     e.preventDefault();
     if (!url) return;
@@ -20,7 +29,7 @@ const HomePage: React.FC<HomePageProps> = ({ siteName }) => {
     setIsLoading(true);
     
     setTimeout(() => {
-      const shortCode = Math.random().toString(36).substring(2, 8);
+      const shortCode = generateLongCode();
       const newLink: LinkType = {
         id: Math.random().toString(36).substring(7),
         userId: 'admin',
@@ -91,7 +100,7 @@ const HomePage: React.FC<HomePageProps> = ({ siteName }) => {
               <div className="flex flex-col md:flex-row items-center justify-between gap-8 relative z-10">
                 <div className="text-left w-full overflow-hidden">
                   <p className="text-indigo-400 text-xs font-black uppercase tracking-[0.3em] mb-4">Secure Path Generated</p>
-                  <div className="text-xl md:text-3xl font-black truncate bg-white/5 p-5 rounded-2xl border border-white/10 font-mono text-indigo-100">
+                  <div className="text-xl md:text-2xl font-black truncate bg-white/5 p-5 rounded-2xl border border-white/10 font-mono text-indigo-100">
                     {getBaseUrl()}#/s/{shortenedLink.shortCode}
                   </div>
                 </div>

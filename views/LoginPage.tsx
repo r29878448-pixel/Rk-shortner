@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Link as LinkIcon, Mail, Lock, Loader2, Info, Zap } from 'lucide-react';
+import { Link as LinkIcon, Mail, Lock, Loader2, Zap } from 'lucide-react';
 import { User, UserRole, SubscriptionPlan } from '../types';
 
 interface LoginPageProps {
@@ -15,9 +15,17 @@ const LoginPage: React.FC<LoginPageProps> = ({ onAuth }) => {
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
 
-  // New Admin Credentials
   const MASTER_EMAIL = 'admin@swiftlink.pro';
   const MASTER_PASS = 'admin786';
+
+  const generateAlphanumericKey = () => {
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+    let result = 'sk_live_';
+    for (let i = 0; i < 32; i++) {
+      result += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    return result;
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -27,12 +35,23 @@ const LoginPage: React.FC<LoginPageProps> = ({ onAuth }) => {
       const isAdmin = email === MASTER_EMAIL && password === MASTER_PASS;
       
       if (isAdmin) {
+        // Ensure we always have an alphanumeric key for the admin
+        let storedUser = localStorage.getItem('swiftlink_user');
+        let apiKey = '';
+        
+        if (storedUser) {
+          const parsed = JSON.parse(storedUser);
+          apiKey = parsed.apiKey.startsWith('sk_live_') ? parsed.apiKey : generateAlphanumericKey();
+        } else {
+          apiKey = generateAlphanumericKey();
+        }
+
         const mockUser: User = {
           id: 'master-admin',
           email,
           role: UserRole.ADMIN,
           plan: SubscriptionPlan.BUSINESS,
-          apiKey: 'sk_master_admin_production',
+          apiKey: apiKey,
           createdAt: new Date(),
           isSuspended: false
         };
@@ -55,7 +74,6 @@ const LoginPage: React.FC<LoginPageProps> = ({ onAuth }) => {
   return (
     <div className="min-h-[85vh] flex items-center justify-center px-4 bg-slate-50">
       <div className="max-w-md w-full">
-        {/* Quick Access Utility */}
         <div className="mb-6 p-6 bg-white border border-slate-200 rounded-[2rem] shadow-sm flex flex-col items-center text-center">
           <div className="w-10 h-10 bg-amber-100 rounded-full flex items-center justify-center mb-3">
             <Zap className="text-amber-600 w-5 h-5" />
@@ -117,9 +135,9 @@ const LoginPage: React.FC<LoginPageProps> = ({ onAuth }) => {
               {loading ? (
                 <Loader2 className="w-7 h-7 animate-spin" />
               ) : (
-                <>
-                  Enter Dashboard <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
-                </>
+                <div className="flex items-center">
+                  Enter Dashboard <span className="ml-2">→</span>
+                </div>
               )}
             </button>
           </form>
@@ -133,12 +151,5 @@ const LoginPage: React.FC<LoginPageProps> = ({ onAuth }) => {
     </div>
   );
 };
-
-// Internal icon helper
-const ArrowRight = ({ className }: { className?: string }) => (
-  <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M14 5l7 7m0 0l-7 7m7-7H3" />
-  </svg>
-);
 
 export default LoginPage;
