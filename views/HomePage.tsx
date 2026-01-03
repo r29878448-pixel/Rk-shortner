@@ -1,8 +1,7 @@
 
 import React, { useState } from 'react';
-import { ChevronRight, Copy, Check, Loader2, Zap, Shield } from 'lucide-react';
+import { Copy, Check, Loader2, Zap, Link as LinkIcon } from 'lucide-react';
 import { Link as LinkType, SiteSettings } from '../types.ts';
-import AdSlot from '../components/AdSlot.tsx';
 
 interface HomePageProps {
   siteName: string;
@@ -17,7 +16,6 @@ const HomePage: React.FC<HomePageProps> = ({ siteName, settings }) => {
 
   /**
    * Generates a short, professional 7-character alphanumeric code.
-   * This matches the industry standard for high-performance URL shorteners.
    */
   const generateShortCode = () => {
     const chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
@@ -61,45 +59,52 @@ const HomePage: React.FC<HomePageProps> = ({ siteName, settings }) => {
   };
 
   return (
-    <div className="bg-white min-h-[80vh] py-20 px-4">
+    <div className="bg-white min-h-[70vh] flex flex-col justify-center py-20 px-4 font-sans">
       <div className="max-w-4xl mx-auto text-center">
-        <h1 className="text-6xl md:text-8xl font-black text-slate-900 tracking-tighter mb-8 leading-[0.9]">
-          Smart Link <br />
-          <span className="text-indigo-600">Ecosystem.</span>
+        <div className="inline-flex items-center space-x-2 bg-indigo-50 text-indigo-600 px-4 py-2 rounded-full text-xs font-bold uppercase tracking-widest mb-10">
+          <Zap className="w-4 h-4" /> <span>Next-Gen URL Relaying</span>
+        </div>
+        
+        <h1 className="text-5xl md:text-7xl font-bold text-slate-900 tracking-tight mb-8 leading-tight">
+          Smarter Link <br />
+          <span className="text-indigo-600">Infrastructure.</span>
         </h1>
-        <p className="text-xl text-slate-500 max-w-xl mx-auto mb-14 font-medium">The professional multi-step redirect engine for {siteName}.</p>
+        <p className="text-xl text-slate-500 max-w-2xl mx-auto mb-14 font-medium leading-relaxed">
+          Secure, stable, and high-performance link redirection for professional creators. 
+          Manage your digital assets with enterprise-grade stability.
+        </p>
 
-        <form onSubmit={handleShorten} className="bg-white p-3 rounded-[3rem] shadow-2xl border border-slate-100 flex flex-col md:flex-row gap-3 max-w-2xl mx-auto mb-16">
-          <input 
-            type="url" 
-            placeholder="Enter your long destination URL..." 
-            className="flex-grow px-8 py-5 rounded-[2.5rem] bg-slate-50 focus:outline-none font-semibold text-slate-700"
-            value={url}
-            onChange={(e) => setUrl(e.target.value)}
-            required
-          />
-          <button className="bg-indigo-600 text-white px-10 py-5 rounded-[2.5rem] font-black uppercase text-sm shadow-xl hover:bg-indigo-700 transition transform hover:scale-105 active:scale-95">
-            {isLoading ? <Loader2 className="animate-spin" /> : 'Shorten Now'}
+        <form onSubmit={handleShorten} className="bg-slate-50 p-3 rounded-xl border border-slate-200 flex flex-col md:flex-row gap-3 max-w-2xl mx-auto mb-16 shadow-lg">
+          <div className="relative flex-grow">
+            <LinkIcon className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-400 w-5 h-5" />
+            <input 
+              type="url" 
+              placeholder="Paste your long destination URL here..." 
+              className="w-full pl-14 pr-6 py-5 rounded bg-white border border-slate-200 focus:border-indigo-500 focus:outline-none font-semibold text-slate-700 shadow-inner"
+              value={url}
+              onChange={(e) => setUrl(e.target.value)}
+              required
+            />
+          </div>
+          <button className="bg-indigo-600 text-white px-10 py-5 rounded font-bold uppercase text-sm shadow-xl hover:bg-indigo-700 transition flex items-center justify-center min-w-[180px]">
+            {isLoading ? <Loader2 className="animate-spin" /> : 'Shorten URL'}
           </button>
         </form>
 
         {shortenedLink && (
-          <div className="bg-slate-900 p-10 rounded-[3rem] text-white flex flex-col md:flex-row items-center justify-between gap-6 max-w-2xl mx-auto animate-in border border-indigo-500/30">
+          <div className="bg-slate-900 p-8 rounded-xl text-white flex flex-col md:flex-row items-center justify-between gap-6 max-w-2xl mx-auto animate-in border-4 border-slate-800 shadow-2xl">
             <div className="text-left overflow-hidden">
-              <p className="text-[10px] font-black uppercase tracking-widest text-indigo-400 mb-2">Short Link Ready</p>
-              <span className="text-lg font-mono truncate block text-indigo-100">
+              <p className="text-[10px] font-bold uppercase tracking-widest text-indigo-400 mb-2">Your Secure Link</p>
+              <span className="text-xl font-mono truncate block text-indigo-50">
                 {window.location.href.split('#')[0]}#/s/{shortenedLink.shortCode}
               </span>
             </div>
-            <button onClick={copyToClipboard} className="bg-white text-slate-900 px-8 py-4 rounded-2xl font-black text-xs uppercase tracking-widest flex items-center space-x-2 shrink-0 hover:bg-indigo-50 transition">
-              {isCopied ? <Check className="w-4 h-4 text-green-500" /> : <Copy className="w-4 h-4" />}
-              <span>{isCopied ? 'Copied' : 'Copy URL'}</span>
+            <button onClick={copyToClipboard} className="bg-white text-slate-900 px-8 py-4 rounded font-bold text-xs uppercase tracking-widest flex items-center space-x-3 shrink-0 hover:bg-indigo-50 transition">
+              {isCopied ? <Check className="w-5 h-5 text-green-500" /> : <Copy className="w-5 h-5" />}
+              <span>{isCopied ? 'Copied!' : 'Copy Link'}</span>
             </button>
           </div>
         )}
-
-        {/* Global Middle Ad */}
-        <AdSlot html={settings.adSlots.middle} className="mt-20" />
       </div>
     </div>
   );
