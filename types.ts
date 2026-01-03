@@ -47,6 +47,7 @@ export interface SiteSettings {
     top: string;
     middle: string;
     bottom: string;
+    contentAds: string[]; // Added support for multiple mid-article ads
   };
   stepAds: string[]; 
   redirectDelay: number; 
