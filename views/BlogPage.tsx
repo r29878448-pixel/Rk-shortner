@@ -1,75 +1,71 @@
 
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { BlogPost } from '../types.ts';
-import { Calendar, User, ArrowRight, Clock } from 'lucide-react';
+import { Calendar, ArrowRight, Clock, ShieldCheck, TrendingUp } from 'lucide-react';
 
 const DEMO_POSTS: BlogPost[] = [
   {
     id: '1',
-    title: 'How to Maximize Your Earnings with URL Shorteners',
-    excerpt: 'Link monetization is a powerful way to generate passive income. Discover the best strategies for high-conversion traffic.',
-    content: 'Long form content about monetization...',
-    author: 'Admin',
+    title: 'The Future of Link Security in 2026',
+    excerpt: 'Multi-stage verification is no longer optional. Learn how SwiftLink protects your assets and monetization flow.',
+    content: '',
+    author: 'Editorial Team',
     date: 'Oct 12, 2025',
-    imageUrl: 'https://images.unsplash.com/photo-1553729459-efe14ef6055d?auto=format&fit=crop&q=80&w=800'
-  },
-  {
-    id: '2',
-    title: 'The Future of Secure Link Redirection in 2026',
-    excerpt: 'Digital security is evolving. Learn how multi-step verification helps protect your users and your revenue.',
-    content: 'Content about security...',
-    author: 'Tech Team',
-    date: 'Sep 28, 2025',
     imageUrl: 'https://images.unsplash.com/photo-1550751827-4bd374c3f58b?auto=format&fit=crop&q=80&w=800'
   },
   {
+    id: '2',
+    title: 'Maximizing CTR with Native Content',
+    excerpt: 'How long-form educational content keeps users engaged during the redirection process.',
+    content: '',
+    author: 'Marketing',
+    date: 'Sep 28, 2025',
+    imageUrl: 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&q=80&w=800'
+  },
+  {
     id: '3',
-    title: 'Link Tracking: Why Analytics Matter for Your Business',
-    excerpt: 'Data-driven decisions are key to growth. See how our platform provides detailed insights for every click.',
-    content: 'Content about analytics...',
+    title: 'Advanced Analytics for Digital Creators',
+    excerpt: 'Understand your audience beyond just clicks. Data-driven growth strategies for the modern web.',
+    content: '',
     author: 'Admin',
     date: 'Sep 15, 2025',
     imageUrl: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&q=80&w=800'
-  },
-  {
-    id: '4',
-    title: 'SEO Best Practices for Short Link Management',
-    excerpt: 'Can short links help your SEO? We explore how to manage your digital footprint effectively.',
-    content: 'Content about SEO...',
-    author: 'Marketing',
-    date: 'Aug 30, 2025',
-    imageUrl: 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&q=80&w=800'
   }
 ];
 
 const BlogPage: React.FC = () => {
   return (
-    <div className="bg-slate-50 py-24 min-h-screen">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="max-w-3xl mb-20">
-          <h1 className="text-5xl font-black text-slate-900 tracking-tighter mb-6">Platform Insights</h1>
-          <p className="text-xl text-slate-500 font-medium leading-relaxed">Everything you need to know about link monetization, security, and digital marketing trends.</p>
+    <div className="bg-slate-50 py-12 md:py-20 min-h-screen font-sans">
+      <div className="max-w-7xl mx-auto px-6">
+        <div className="max-w-3xl mb-12 md:mb-20">
+          <div className="inline-flex items-center space-x-2 text-indigo-600 bg-indigo-50 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest mb-4">
+            <TrendingUp className="w-3 h-3" /> <span>Platform Insights</span>
+          </div>
+          <h1 className="text-4xl md:text-5xl font-black text-slate-900 tracking-tighter mb-4 uppercase">News & Insights</h1>
+          <p className="text-base md:text-lg text-slate-500 font-medium leading-relaxed">Official updates, security briefings, and marketing strategies for professional link management.</p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 md:gap-10">
           {DEMO_POSTS.map(post => (
-            <article key={post.id} className="bg-white rounded-[2.5rem] border border-slate-100 overflow-hidden hover:shadow-2xl transition duration-500 group flex flex-col">
-              <div className="h-64 relative overflow-hidden">
-                <img src={post.imageUrl} className="w-full h-full object-cover group-hover:scale-110 transition duration-700" alt={post.title} />
-                <div className="absolute top-6 left-6 bg-white/90 backdrop-blur px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-widest text-indigo-600 shadow-sm">
-                  Strategy
+            <article key={post.id} className="bg-white rounded-xl border border-slate-200 overflow-hidden hover:shadow-xl transition-all duration-300 flex flex-col group">
+              <div className="h-56 relative overflow-hidden">
+                <img src={post.imageUrl} className="w-full h-full object-cover group-hover:scale-105 transition duration-500" alt={post.title} />
+                <div className="absolute top-4 left-4 bg-white/90 backdrop-blur px-2 py-1 rounded text-[9px] font-black uppercase tracking-widest text-indigo-600 flex items-center">
+                  <ShieldCheck className="w-3 h-3 mr-1" /> Briefing
                 </div>
               </div>
-              <div className="p-10 flex flex-col flex-grow">
-                <div className="flex items-center space-x-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-6">
-                  <span className="flex items-center"><Calendar className="w-3 h-3 mr-1.5" /> {post.date}</span>
-                  <span className="flex items-center"><Clock className="w-3 h-3 mr-1.5" /> 5 min read</span>
+              <div className="p-8 flex flex-col flex-grow">
+                <div className="flex items-center space-x-4 text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-4">
+                  <span className="flex items-center"><Calendar className="w-3 h-3 mr-1" /> {post.date}</span>
+                  <span className="flex items-center"><Clock className="w-3 h-3 mr-1" /> 4m read</span>
                 </div>
-                <h3 className="text-2xl font-black mb-4 text-slate-900 group-hover:text-indigo-600 transition tracking-tight leading-tight">{post.title}</h3>
-                <p className="text-slate-500 text-sm mb-10 leading-relaxed line-clamp-3">{post.excerpt}</p>
-                <button className="mt-auto text-sm font-black text-indigo-600 flex items-center group-hover:translate-x-2 transition-transform uppercase tracking-widest">
-                  Read Article <ArrowRight className="ml-2 w-4 h-4" />
-                </button>
+                <h3 className="text-xl font-black mb-3 text-slate-900 group-hover:text-indigo-600 transition tracking-tight leading-tight uppercase">{post.title}</h3>
+                <p className="text-slate-500 text-xs mb-8 leading-relaxed line-clamp-2">{post.excerpt}</p>
+                <div className="mt-auto pt-4 border-t border-slate-100">
+                  <button className="text-[10px] font-bold text-slate-900 flex items-center hover:text-indigo-600 transition-all uppercase tracking-widest">
+                    Read analysis <ArrowRight className="ml-2 w-3 h-3" />
+                  </button>
+                </div>
               </div>
             </article>
           ))}
