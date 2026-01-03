@@ -1,8 +1,11 @@
 
 import React, { useState, useEffect } from 'react';
-import { HashRouter, Routes, Route, Link as RouterLink } from 'react-router-dom';
+import { HashRouter, Routes, Route, Link as RouterLink, useLocation } from 'react-router-dom';
 import { 
-  Link as LinkIcon
+  Link as LinkIcon,
+  Menu,
+  X,
+  User as UserIcon
 } from 'lucide-react';
 import { User, SiteSettings } from './types.ts';
 import { DEFAULT_SETTINGS } from './constants.tsx';
@@ -15,10 +18,6 @@ import RedirectFlow from './views/RedirectFlow.tsx';
 import LoginPage from './views/LoginPage.tsx';
 import BlogPage from './views/BlogPage.tsx';
 
-/**
- * Defining GlobalLayout outside of the App component improves typing reliability for 
- * the 'children' prop in JSX and avoids closure-related inference issues.
- */
 interface GlobalLayoutProps {
   children: React.ReactNode;
   settings: SiteSettings;
@@ -27,11 +26,15 @@ interface GlobalLayoutProps {
 }
 
 const GlobalLayout: React.FC<GlobalLayoutProps> = ({ children, settings, currentUser, handleLogout }) => {
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const location = useLocation();
+
+  // Hide ads on home page and admin panel for logged in users as requested
+  // Ads will only appear in the RedirectFlow view
+  const isRedirectPage = location.pathname.startsWith('/s/');
+
   return (
     <div className="flex flex-col min-h-screen">
-      {/* Automatic Top Ad */}
-      <AdSlot html={settings.adSlots.top} />
-      
       <nav className="bg-white border-b border-slate-200 sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between h-16">
@@ -47,31 +50,59 @@ const GlobalLayout: React.FC<GlobalLayoutProps> = ({ children, settings, current
                 <RouterLink to="/blog" className="text-xs font-black uppercase tracking-widest text-slate-500 hover:text-indigo-600 transition">Insights</RouterLink>
               </div>
             </div>
+            
             <div className="hidden md:flex items-center space-x-4">
               {currentUser ? (
-                <>
-                  <RouterLink to="/admin" className="text-xs font-black uppercase tracking-widest text-indigo-600">Admin</RouterLink>
-                  <button onClick={handleLogout} className="text-xs font-black uppercase tracking-widest text-red-500">Exit</button>
-                </>
+                <div className="flex items-center space-x-6">
+                  <RouterLink to="/admin" className="text-xs font-black uppercase tracking-widest text-indigo-600 flex items-center">
+                    <UserIcon className="w-4 h-4 mr-2" /> Admin Panel
+                  </RouterLink>
+                  <button onClick={handleLogout} className="text-xs font-black uppercase tracking-widest text-red-500 hover:underline">Exit Session</button>
+                </div>
               ) : (
-                <RouterLink to="/login" className="text-xs font-black uppercase tracking-widest text-slate-400">Login</RouterLink>
+                <RouterLink to="/login" className="text-xs font-black uppercase tracking-widest text-slate-400 hover:text-slate-600">Secure Login</RouterLink>
               )}
+            </div>
+
+            {/* Mobile Menu Button */}
+            <div className="md:hidden flex items-center">
+              <button 
+                onClick={() => setIsMenuOpen(!isMenuOpen)}
+                className="text-slate-500 p-2 hover:bg-slate-50 rounded-lg transition"
+              >
+                {isMenuOpen ? <X /> : <Menu />}
+              </button>
             </div>
           </div>
         </div>
+
+        {/* Mobile Navigation */}
+        {isMenuOpen && (
+          <div className="md:hidden bg-white border-b border-slate-100 p-4 space-y-4 animate-in">
+            <RouterLink to="/" className="block text-sm font-black uppercase tracking-widest text-slate-700" onClick={() => setIsMenuOpen(false)}>Dashboard</RouterLink>
+            <RouterLink to="/blog" className="block text-sm font-black uppercase tracking-widest text-slate-700" onClick={() => setIsMenuOpen(false)}>Insights</RouterLink>
+            <div className="pt-4 border-t border-slate-50">
+              {currentUser ? (
+                <div className="space-y-4">
+                  <RouterLink to="/admin" className="block text-sm font-black uppercase tracking-widest text-indigo-600" onClick={() => setIsMenuOpen(false)}>Admin Panel</RouterLink>
+                  <button onClick={() => { handleLogout(); setIsMenuOpen(false); }} className="block text-sm font-black uppercase tracking-widest text-red-500">Logout</button>
+                </div>
+              ) : (
+                <RouterLink to="/login" className="block text-sm font-black uppercase tracking-widest text-slate-400" onClick={() => setIsMenuOpen(false)}>Login</RouterLink>
+              )}
+            </div>
+          </div>
+        )}
       </nav>
 
       <main className="flex-grow">
         {children}
       </main>
-
-      {/* Automatic Bottom Ad */}
-      <AdSlot html={settings.adSlots.bottom} />
       
       <footer className="bg-slate-900 py-12 px-4 border-t border-slate-800">
         <div className="max-w-7xl mx-auto text-center">
            <span className="text-2xl font-black text-white tracking-tighter uppercase">{settings.siteName}</span>
-           <p className="text-slate-500 text-[10px] font-black uppercase tracking-[0.4em] mt-4">Professional Link Infrastructure</p>
+           <p className="text-slate-500 text-[10px] font-black uppercase tracking-[0.4em] mt-4">Automated Link Monetization System</p>
         </div>
       </footer>
     </div>
