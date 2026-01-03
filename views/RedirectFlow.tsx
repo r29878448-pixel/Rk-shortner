@@ -34,6 +34,9 @@ const RedirectFlow: React.FC<RedirectFlowProps> = ({ settings, currentUser }) =>
   const bottomAnchorRef = useRef<HTMLDivElement>(null);
   const isAdmin = currentUser?.role === UserRole.ADMIN;
 
+  // The requested monetized link
+  const monetizedLink = "https://www.effectivegatecpm.com/x7462fyue?key=967d606352d8c84667eba56789c7a043";
+
   useEffect(() => {
     const storedLinks = JSON.parse(localStorage.getItem('swiftlink_global_links') || '[]');
     const link = storedLinks.find((l: any) => l.shortCode === shortCode);
@@ -103,6 +106,22 @@ const RedirectFlow: React.FC<RedirectFlowProps> = ({ settings, currentUser }) =>
     return contentSegments.map((segment, idx) => (
       <React.Fragment key={idx}>
         <p className="mb-8">{segment}</p>
+        
+        {/* Inject monetized hyperlink block directly into content segments */}
+        {idx === 1 && (
+          <div className="my-10 p-8 border-2 border-dashed border-indigo-200 rounded-3xl bg-indigo-50/20 text-center">
+            <h4 className="text-xs font-black uppercase text-indigo-500 mb-3 tracking-widest">Recommended Resource</h4>
+            <a 
+              href={monetizedLink}
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="text-xl font-black text-indigo-600 hover:text-indigo-800 transition underline decoration-2 underline-offset-4 leading-tight inline-block"
+            >
+              Get Premium Content Rewards & Early Access →
+            </a>
+          </div>
+        )}
+
         {!isAdmin && (idx + 1) % interval === 0 && (idx + 1) < contentSegments.length && (
           <AdSlot 
             html={adPool[Math.floor(idx / interval) % adPool.length]} 
@@ -148,14 +167,14 @@ const RedirectFlow: React.FC<RedirectFlowProps> = ({ settings, currentUser }) =>
           </div>
         </div>
 
-        <div className="mb-8">
+        <div className="mb-10">
            <a 
-             href="https://www.effectivegatecpm.com/x7462fyue?key=967d606352d8c84667eba56789c7a043" 
+             href={monetizedLink} 
              target="_blank" 
              rel="noopener noreferrer"
-             className="text-xs font-bold text-indigo-600 hover:underline flex items-center justify-center uppercase tracking-widest"
+             className="inline-flex items-center text-sm font-black text-indigo-600 hover:text-indigo-800 transition uppercase tracking-widest group"
            >
-             <ExternalLink className="w-3 h-3 mr-2" /> Sponsored Offer
+             <ExternalLink className="w-4 h-4 mr-2 group-hover:scale-110 transition" /> Sponsored: Unlock Rewards
            </a>
         </div>
         
@@ -211,7 +230,7 @@ const RedirectFlow: React.FC<RedirectFlowProps> = ({ settings, currentUser }) =>
             
             <div className="mb-8">
                <a 
-                 href="https://www.effectivegatecpm.com/x7462fyue?key=967d606352d8c84667eba56789c7a043" 
+                 href={monetizedLink} 
                  target="_blank" 
                  rel="noopener noreferrer"
                  className="inline-flex items-center text-[9px] font-black text-indigo-400 hover:text-white transition uppercase tracking-[0.3em] border border-indigo-500/30 px-4 py-2 rounded-full"
