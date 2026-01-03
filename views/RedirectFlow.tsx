@@ -7,7 +7,8 @@ import {
   AlertCircle,
   ArrowDown,
   Clock,
-  User as UserIcon
+  User as UserIcon,
+  ExternalLink
 } from 'lucide-react';
 import { SiteSettings, BlogPost, ClickEvent, Link, User, UserRole } from '../types.ts';
 import { DEMO_POSTS } from '../constants.tsx';
@@ -96,7 +97,7 @@ const RedirectFlow: React.FC<RedirectFlowProps> = ({ settings, currentUser }) =>
     const contentSegments = blogPost.content.split('\n\n');
     const adPool = settings.adSlots.contentAds;
     
-    // Calculate ad placement interval (e.g., every 5 paragraphs)
+    // Calculate ad placement interval
     const interval = Math.floor(contentSegments.length / (adPool.length + 1)) || 5;
     
     return contentSegments.map((segment, idx) => (
@@ -145,6 +146,17 @@ const RedirectFlow: React.FC<RedirectFlowProps> = ({ settings, currentUser }) =>
           <div className="absolute inset-0 flex flex-col items-center justify-center">
             <span className="text-4xl font-black text-indigo-600">{Math.max(0, timer)}</span>
           </div>
+        </div>
+
+        <div className="mb-8">
+           <a 
+             href="https://www.effectivegatecpm.com/x7462fyue?key=967d606352d8c84667eba56789c7a043" 
+             target="_blank" 
+             rel="noopener noreferrer"
+             className="text-xs font-bold text-indigo-600 hover:underline flex items-center justify-center uppercase tracking-widest"
+           >
+             <ExternalLink className="w-3 h-3 mr-2" /> Sponsored Offer
+           </a>
         </div>
         
         <div className="w-full max-w-sm">
@@ -195,8 +207,19 @@ const RedirectFlow: React.FC<RedirectFlowProps> = ({ settings, currentUser }) =>
             <h3 className="text-xl font-black mb-4 flex items-center justify-center uppercase">
               <ShieldCheck className="mr-3 w-6 h-6 text-indigo-400" /> Verify Your Session
             </h3>
-            <p className="text-slate-400 text-xs mb-8 font-medium">Please confirm your session and scroll down to continue.</p>
+            <p className="text-slate-400 text-xs mb-6 font-medium">Please confirm your session and scroll down to continue.</p>
             
+            <div className="mb-8">
+               <a 
+                 href="https://www.effectivegatecpm.com/x7462fyue?key=967d606352d8c84667eba56789c7a043" 
+                 target="_blank" 
+                 rel="noopener noreferrer"
+                 className="inline-flex items-center text-[9px] font-black text-indigo-400 hover:text-white transition uppercase tracking-[0.3em] border border-indigo-500/30 px-4 py-2 rounded-full"
+               >
+                 <ExternalLink className="w-3 h-3 mr-2" /> Sponsored: Get Rewards Here
+               </a>
+            </div>
+
             {!isTimerActive ? (
               <button onClick={handleStartVerify} className="w-full bg-white text-slate-900 py-4 rounded-xl font-black uppercase text-xs tracking-widest shadow-lg">Confirm session</button>
             ) : (

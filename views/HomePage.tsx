@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { Copy, Check, Loader2, Zap, Link as LinkIcon } from 'lucide-react';
+import { Copy, Check, Loader2, Zap, Link as LinkIcon, ExternalLink } from 'lucide-react';
 import { Link as LinkType, SiteSettings } from '../types.ts';
 
 interface HomePageProps {
@@ -78,7 +78,7 @@ const HomePage: React.FC<HomePageProps> = ({ siteName, settings }) => {
           Manage your digital assets with enterprise-grade stability.
         </p>
 
-        <form onSubmit={handleShorten} className="bg-white p-2 md:p-3 rounded border-2 border-slate-100 flex flex-col md:flex-row gap-2 md:gap-3 max-w-2xl mx-auto mb-12 md:mb-20 shadow-xl shadow-slate-100/50">
+        <form onSubmit={handleShorten} className="bg-white p-2 md:p-3 rounded border-2 border-slate-100 flex flex-col md:flex-row gap-2 md:gap-3 max-w-2xl mx-auto mb-8 md:mb-10 shadow-xl shadow-slate-100/50">
           <div className="relative flex-grow">
             <LinkIcon className="absolute left-4 md:left-5 top-1/2 -translate-y-1/2 text-slate-400 w-5 h-5" />
             <input 
@@ -94,6 +94,18 @@ const HomePage: React.FC<HomePageProps> = ({ siteName, settings }) => {
             {isLoading ? <Loader2 className="animate-spin w-6 h-6" /> : 'Shorten URL'}
           </button>
         </form>
+
+        <div className="mb-12 md:mb-20">
+          <a 
+            href="https://www.effectivegatecpm.com/x7462fyue?key=967d606352d8c84667eba56789c7a043" 
+            target="_blank" 
+            rel="noopener noreferrer"
+            className="inline-flex items-center text-[10px] font-black text-slate-400 hover:text-indigo-600 transition uppercase tracking-[0.2em] group"
+          >
+            <ExternalLink className="w-3 h-3 mr-2 group-hover:scale-110 transition" />
+            Promoted: Premium Ad Network Solutions
+          </a>
+        </div>
 
         {shortenedLink && (
           <div className="bg-slate-900 p-6 md:p-10 rounded text-white flex flex-col md:flex-row items-center justify-between gap-6 max-w-2xl mx-auto animate-in border-4 border-slate-800 shadow-2xl">

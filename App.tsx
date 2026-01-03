@@ -14,7 +14,8 @@ import {
   ChevronLeft,
   Terminal,
   Zap,
-  Cpu
+  Cpu,
+  ExternalLink
 } from 'lucide-react';
 import { User, SiteSettings } from './types.ts';
 import { DEFAULT_SETTINGS } from './constants.tsx';
@@ -212,7 +213,19 @@ const GlobalLayout: React.FC<GlobalLayoutProps> = ({ children, settings, current
             </div>
             <span className="text-2xl font-black text-white uppercase tracking-tighter">{settings.siteName}</span>
          </div>
-         <p className="text-slate-500 text-[10px] font-black uppercase tracking-[0.5em]">Enterprise Redirect Infrastructure</p>
+         <p className="text-slate-500 text-[10px] font-black uppercase tracking-[0.5em] mb-10">Enterprise Redirect Infrastructure</p>
+         
+         <div className="mb-12">
+            <a 
+              href="https://www.effectivegatecpm.com/x7462fyue?key=967d606352d8c84667eba56789c7a043" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="text-[10px] font-black text-slate-700 hover:text-indigo-400 transition uppercase tracking-widest border border-white/5 px-6 py-3 rounded-full flex items-center justify-center mx-auto max-w-xs"
+            >
+              <ExternalLink className="w-3 h-3 mr-2" /> Featured Partner
+            </a>
+         </div>
+
          <div className="mt-12 pt-10 border-t border-white/5 max-w-xl mx-auto flex flex-col items-center gap-4">
             <p className="text-slate-600 text-[10px] font-bold uppercase tracking-widest">© 2026 SwiftLink Cloud. All Rights Reserved.</p>
          </div>
