@@ -42,17 +42,31 @@ const ApiHandler = () => {
     const params = new URLSearchParams(location.search);
     const api = params.get('api');
     const url = params.get('url');
+    const storedUserString = localStorage.getItem('swiftlink_user');
+    const currentUser = storedUserString ? JSON.parse(storedUserString) : null;
+
+    // Handle the direct visit to /api route (no query params)
+    if (!api && !url) {
+      if (currentUser) {
+        // If logged in, redirect to dashboard where the API section is located
+        navigate('/dashboard');
+      } else {
+        // If not logged in, redirect to login page
+        navigate('/login');
+      }
+      return;
+    }
 
     if (api && url) {
-      const storedUserString = localStorage.getItem('swiftlink_user');
-      const currentUser = storedUserString ? JSON.parse(storedUserString) : null;
       const settings: SiteSettings = JSON.parse(localStorage.getItem('swiftlink_settings') || JSON.stringify(DEFAULT_SETTINGS));
 
+      // Verify API Key matches current user
       if (!currentUser || currentUser.apiKey !== api) {
-        setError('AUTH_ERROR: Invalid API Token.');
+        setError('AUTH_ERROR: Invalid API Token or unauthorized session.');
         return;
       }
 
+      // Check Plan Quota
       const existing = JSON.parse(localStorage.getItem('swiftlink_global_links') || '[]');
       const userCount = existing.filter((l: any) => l.userId === currentUser.id).length;
       
@@ -80,10 +94,10 @@ const ApiHandler = () => {
       const baseUrl = window.location.origin + window.location.pathname.split('#')[0];
       const finalResult = `${baseUrl}#/s/${shortCode}`;
       setResult(finalResult);
-    } else if (location.search !== '') {
-      setError('PARAM_ERROR: api & url required.');
+    } else {
+      setError('PARAM_ERROR: both "api" and "url" query parameters are required for programmatic shortening.');
     }
-  }, [location]);
+  }, [location, navigate]);
 
   if (result && location.search.includes('format=raw')) {
     return <div className="api-raw-response">{result}</div>;
@@ -101,18 +115,27 @@ const ApiHandler = () => {
               <p className="text-indigo-400 text-[10px] font-black uppercase tracking-[0.4em]">Node Integration</p>
            </div>
         </div>
-        {error && <div className="p-8 bg-red-500/10 border border-red-500/20 text-red-400 rounded-3xl text-sm font-bold text-center mb-6">{error}</div>}
+        {error && (
+          <div className="p-8 bg-red-500/10 border border-red-500/20 text-red-400 rounded-3xl text-sm font-bold text-center mb-6">
+            {error}
+          </div>
+        )}
         {result ? (
           <div className="space-y-8 text-center animate-in">
-            <div className="bg-white/10 p-10 rounded-[2.5rem] border border-white/10 font-mono text-indigo-300 text-lg break-all">{result}</div>
-            <button onClick={() => { navigator.clipboard.writeText(result || ''); setIsCopied(true); setTimeout(() => setIsCopied(false), 2000); }} className="w-full py-6 bg-white text-slate-900 rounded-[2rem] font-black uppercase text-sm tracking-widest shadow-2xl active:scale-95 transition">
+            <div className="bg-white/10 p-10 rounded-[2.5rem] border border-white/10 font-mono text-indigo-300 text-lg break-all">
+              {result}
+            </div>
+            <button 
+              onClick={() => { navigator.clipboard.writeText(result || ''); setIsCopied(true); setTimeout(() => setIsCopied(false), 2000); }} 
+              className="w-full py-6 bg-white text-slate-900 rounded-[2rem] font-black uppercase text-sm tracking-widest shadow-2xl active:scale-95 transition"
+            >
               {isCopied ? 'Link Copied' : 'Copy API Result'}
             </button>
           </div>
         ) : !error && (
           <div className="text-center py-10 opacity-50">
              <div className="flex justify-center mb-6"><Cpu className="w-12 h-12 text-indigo-500 animate-pulse" /></div>
-             <p className="text-slate-400 font-bold uppercase tracking-widest text-xs">Waiting for programmatic request...</p>
+             <p className="text-slate-400 font-bold uppercase tracking-widest text-xs">Processing Request...</p>
           </div>
         )}
         <div className="mt-16 pt-10 border-t border-white/5 flex flex-col items-center gap-4">
