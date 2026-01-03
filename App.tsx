@@ -138,6 +138,10 @@ const GlobalLayout: React.FC<GlobalLayoutProps> = ({ children, settings, current
   const isRedirectPage = location.pathname.startsWith('/s/');
   const isApiPage = location.pathname === '/api';
 
+  useEffect(() => {
+    setIsMenuOpen(false);
+  }, [location]);
+
   if (isRedirectPage || isApiPage) return <>{children}</>;
 
   return (
@@ -154,6 +158,7 @@ const GlobalLayout: React.FC<GlobalLayoutProps> = ({ children, settings, current
               </RouterLink>
             </div>
             
+            {/* Desktop Menu */}
             <div className="hidden md:flex items-center space-x-8">
               <RouterLink to="/" className="text-[11px] font-black text-slate-600 hover:text-indigo-600 uppercase tracking-[0.2em] transition">Create</RouterLink>
               <RouterLink to="/blog" className="text-[11px] font-black text-slate-600 hover:text-indigo-600 uppercase tracking-[0.2em] transition">Insights</RouterLink>
@@ -173,13 +178,55 @@ const GlobalLayout: React.FC<GlobalLayoutProps> = ({ children, settings, current
               )}
             </div>
 
+            {/* Mobile Menu Toggle Button */}
             <div className="md:hidden flex items-center">
-              <button onClick={() => setIsMenuOpen(!isMenuOpen)} className="text-slate-900 p-2">
-                {isMenuOpen ? <X className="w-8 h-8" /> : <Menu className="w-8 h-8" />}
+              <button 
+                onClick={() => setIsMenuOpen(!isMenuOpen)} 
+                className="text-slate-900 p-2 bg-slate-50 rounded-xl hover:bg-slate-100 transition"
+                aria-label="Toggle menu"
+              >
+                {isMenuOpen ? <X className="w-7 h-7" /> : <Menu className="w-7 h-7" />}
               </button>
             </div>
           </div>
         </div>
+
+        {/* Mobile Menu Content Drawer */}
+        {isMenuOpen && (
+          <div className="md:hidden fixed inset-x-0 top-20 bottom-0 z-[999] bg-white border-t border-slate-100 overflow-y-auto animate-in">
+            <div className="p-6 space-y-4">
+              <RouterLink to="/" className="block p-4 bg-slate-50 rounded-2xl text-[12px] font-black uppercase tracking-widest text-slate-900">Create Relay</RouterLink>
+              <RouterLink to="/blog" className="block p-4 bg-slate-50 rounded-2xl text-[12px] font-black uppercase tracking-widest text-slate-900">Latest Insights</RouterLink>
+              <RouterLink to="/pricing" className="block p-4 bg-slate-50 rounded-2xl text-[12px] font-black uppercase tracking-widest text-slate-900">Network Plans</RouterLink>
+              
+              <div className="pt-6 border-t border-slate-100 space-y-4">
+                {currentUser ? (
+                  <>
+                    {currentUser.role === 'ADMIN' ? (
+                      <RouterLink to="/admin" className="block p-5 bg-indigo-600 text-white text-center rounded-2xl text-[12px] font-black uppercase tracking-widest shadow-xl shadow-indigo-100">
+                        Admin Panel: Network Node
+                      </RouterLink>
+                    ) : (
+                      <RouterLink to="/dashboard" className="block p-5 bg-slate-900 text-white text-center rounded-2xl text-[12px] font-black uppercase tracking-widest flex items-center justify-center">
+                        <Wallet className="w-4 h-4 mr-2" /> My Dashboard
+                      </RouterLink>
+                    )}
+                    <button 
+                      onClick={handleLogout}
+                      className="w-full p-4 text-center text-[11px] font-black text-red-500 uppercase tracking-[0.2em]"
+                    >
+                      Security Sign Out
+                    </button>
+                  </>
+                ) : (
+                  <RouterLink to="/login" className="block p-5 bg-slate-900 text-white text-center rounded-2xl text-[12px] font-black uppercase tracking-widest">
+                    Authentication Portal
+                  </RouterLink>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
       </nav>
 
       <main className="flex-grow">{children}</main>
