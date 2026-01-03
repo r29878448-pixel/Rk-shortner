@@ -8,7 +8,10 @@ import {
   User as UserIcon,
   Shield,
   LayoutDashboard,
-  FileText
+  FileText,
+  Copy,
+  Check,
+  ChevronLeft
 } from 'lucide-react';
 import { User, SiteSettings } from './types.ts';
 import { DEFAULT_SETTINGS } from './constants.tsx';
@@ -29,6 +32,7 @@ const ApiHandler = () => {
   const navigate = useNavigate();
   const [result, setResult] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [isCopied, setIsCopied] = useState(false);
 
   useEffect(() => {
     const params = new URLSearchParams(location.search);
@@ -37,9 +41,11 @@ const ApiHandler = () => {
 
     if (api && url) {
       // Validate Key
-      const storedUser = JSON.parse(localStorage.getItem('swiftlink_user') || '{}');
-      if (storedUser.apiKey !== api) {
-        setError('Invalid API Key.');
+      const storedUserString = localStorage.getItem('swiftlink_user');
+      const storedUser = storedUserString ? JSON.parse(storedUserString) : null;
+      
+      if (!storedUser || storedUser.apiKey !== api) {
+        setError('Authentication Failed: Invalid API Token.');
         return;
       }
 
@@ -47,7 +53,7 @@ const ApiHandler = () => {
       const shortCode = Math.random().toString(36).substring(2, 9);
       const newLink = {
         id: Math.random().toString(36).substring(7),
-        userId: 'admin',
+        userId: storedUser.id,
         originalUrl: url,
         shortCode,
         clicks: 0,
@@ -60,38 +66,54 @@ const ApiHandler = () => {
       const baseUrl = window.location.origin + window.location.pathname.replace(/\/[^\/]*$/, '/');
       setResult(`${baseUrl}#/s/${shortCode}`);
     } else {
-      setError('Missing required parameters: ?api=TOKEN&url=LONG_URL');
+      setError('Missing parameters. Format: ?api=YOUR_TOKEN&url=TARGET_URL');
     }
   }, [location]);
 
+  const copyResult = () => {
+    if (result) {
+      navigator.clipboard.writeText(result);
+      setIsCopied(true);
+      setTimeout(() => setIsCopied(false), 2000);
+    }
+  };
+
   return (
-    <div className="min-h-screen bg-slate-900 flex items-center justify-center p-6 text-white text-center">
-      <div className="max-w-lg w-full bg-white/5 border border-white/10 p-10 rounded-2xl backdrop-blur-xl">
-        <div className="w-16 h-16 bg-indigo-600 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-2xl shadow-indigo-500/20">
-           <LinkIcon className="w-8 h-8" />
+    <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
+      <div className="max-w-xl w-full bg-white border border-slate-200 p-10 rounded-[2.5rem] shadow-2xl">
+        <div className="w-16 h-16 bg-indigo-600 rounded-2xl flex items-center justify-center mx-auto mb-8 shadow-xl shadow-indigo-100 transform -rotate-3">
+           <LinkIcon className="text-white w-8 h-8" />
         </div>
-        <h2 className="text-2xl font-black uppercase mb-2">API Integration Result</h2>
-        <p className="text-slate-500 text-xs font-bold uppercase tracking-widest mb-10">Programmatic Relay Node Generated</p>
         
-        {error && <div className="p-4 bg-red-500/20 text-red-400 rounded-lg text-sm font-bold border border-red-500/20">{error}</div>}
+        <h2 className="text-2xl font-black uppercase text-center text-slate-900 tracking-tighter">API Relay Result</h2>
+        <p className="text-slate-400 text-[10px] font-bold uppercase tracking-[0.4em] mb-10 text-center">Programmatic Link Generation</p>
+        
+        {error && (
+          <div className="p-6 bg-red-50 border border-red-100 text-red-600 rounded-2xl text-xs font-bold leading-relaxed">
+            {error}
+          </div>
+        )}
         
         {result && (
-          <div className="space-y-6">
-            <div className="bg-white/10 p-6 rounded-xl border border-white/10 font-mono text-indigo-300 text-sm break-all">
+          <div className="space-y-6 animate-in">
+            <div className="bg-slate-900 p-8 rounded-2xl border border-slate-800 font-mono text-indigo-300 text-sm break-all leading-relaxed shadow-inner">
                {result}
             </div>
             <button 
-              onClick={() => { navigator.clipboard.writeText(result); alert('Link Copied!'); }}
-              className="w-full py-4 bg-white text-slate-900 rounded-xl font-black uppercase text-xs tracking-widest shadow-xl"
+              onClick={copyResult}
+              className="w-full py-5 bg-indigo-600 text-white rounded-2xl font-black uppercase text-xs tracking-widest shadow-xl hover:bg-indigo-700 transition active:scale-95 flex items-center justify-center gap-3"
             >
-              Copy To Clipboard
+              {isCopied ? <Check className="w-5 h-5" /> : <Copy className="w-5 h-5" />}
+              {isCopied ? 'Copied Link!' : 'Copy to Clipboard'}
             </button>
           </div>
         )}
         
-        <button onClick={() => navigate('/')} className="mt-8 text-slate-500 hover:text-white transition text-[10px] font-bold uppercase tracking-widest">
-          Return to Dashboard
-        </button>
+        <div className="mt-12 pt-8 border-t border-slate-50 flex justify-center">
+          <button onClick={() => navigate('/')} className="flex items-center text-slate-400 hover:text-indigo-600 transition text-[10px] font-black uppercase tracking-widest">
+            <ChevronLeft className="w-3 h-3 mr-1" /> Return to Dashboard
+          </button>
+        </div>
       </div>
     </div>
   );
@@ -106,6 +128,10 @@ interface GlobalLayoutProps {
 
 const GlobalLayout: React.FC<GlobalLayoutProps> = ({ children, settings, currentUser, handleLogout }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const location = useLocation();
+  const isRedirectPage = location.pathname.startsWith('/s/');
+
+  if (isRedirectPage) return <>{children}</>;
 
   return (
     <div className="flex flex-col min-h-screen bg-slate-50 font-sans">
@@ -122,16 +148,16 @@ const GlobalLayout: React.FC<GlobalLayoutProps> = ({ children, settings, current
             </div>
             
             <div className="hidden md:flex items-center space-x-6">
-              <RouterLink to="/" className="text-xs font-bold text-slate-600 hover:text-indigo-600 uppercase tracking-widest">Dashboard</RouterLink>
-              <RouterLink to="/blog" className="text-xs font-bold text-slate-600 hover:text-indigo-600 uppercase tracking-widest">Insights</RouterLink>
+              <RouterLink to="/" className="text-xs font-bold text-slate-600 hover:text-indigo-600 uppercase tracking-widest transition">Dashboard</RouterLink>
+              <RouterLink to="/blog" className="text-xs font-bold text-slate-600 hover:text-indigo-600 uppercase tracking-widest transition">Insights</RouterLink>
               
               {currentUser ? (
                 <div className="flex items-center space-x-4 border-l pl-4 border-slate-200">
-                  <RouterLink to="/admin" className="text-[10px] font-black text-white bg-indigo-600 px-4 py-2 rounded uppercase tracking-widest shadow-md">Admin Area</RouterLink>
-                  <button onClick={handleLogout} className="text-[10px] font-bold text-red-500 uppercase tracking-widest">Logout</button>
+                  <RouterLink to="/admin" className="text-[10px] font-black text-white bg-indigo-600 px-4 py-2 rounded-lg uppercase tracking-widest shadow-md hover:bg-indigo-700 transition">Admin Area</RouterLink>
+                  <button onClick={handleLogout} className="text-[10px] font-bold text-red-500 uppercase tracking-widest hover:bg-red-50 px-2 py-1 rounded transition">Logout</button>
                 </div>
               ) : (
-                <RouterLink to="/login" className="text-[10px] font-bold text-slate-700 border px-4 py-2 rounded uppercase tracking-widest hover:bg-slate-50 transition">Login</RouterLink>
+                <RouterLink to="/login" className="text-[10px] font-bold text-slate-700 border px-4 py-2 rounded-lg uppercase tracking-widest hover:bg-slate-50 transition">Login</RouterLink>
               )}
             </div>
 
@@ -145,19 +171,30 @@ const GlobalLayout: React.FC<GlobalLayoutProps> = ({ children, settings, current
 
         {isMenuOpen && (
           <div className="md:hidden bg-white border-t border-slate-200 shadow-2xl py-6 px-4 space-y-2">
-            <RouterLink to="/" className="block py-4 font-black uppercase text-xs tracking-widest text-slate-700" onClick={() => setIsMenuOpen(false)}>Dashboard</RouterLink>
-            <RouterLink to="/blog" className="block py-4 font-black uppercase text-xs tracking-widest text-slate-700" onClick={() => setIsMenuOpen(false)}>Insights</RouterLink>
+            <RouterLink to="/" className="block py-4 font-black uppercase text-xs tracking-widest text-slate-700 border-b border-slate-50" onClick={() => setIsMenuOpen(false)}>Dashboard</RouterLink>
+            <RouterLink to="/blog" className="block py-4 font-black uppercase text-xs tracking-widest text-slate-700 border-b border-slate-50" onClick={() => setIsMenuOpen(false)}>Insights</RouterLink>
             {currentUser && (
               <RouterLink to="/admin" className="block py-4 font-black uppercase text-xs tracking-widest text-indigo-600" onClick={() => setIsMenuOpen(false)}>Admin Station</RouterLink>
+            )}
+            {!currentUser && (
+              <RouterLink to="/login" className="block py-4 font-black uppercase text-xs tracking-widest text-slate-700" onClick={() => setIsMenuOpen(false)}>Login</RouterLink>
             )}
           </div>
         )}
       </nav>
 
       <main className="flex-grow">{children}</main>
-      <footer className="bg-slate-900 py-12 px-4 text-center">
-         <span className="text-xl font-black text-white uppercase tracking-tighter">{settings.siteName}</span>
-         <p className="text-slate-500 text-[9px] font-bold uppercase tracking-[0.4em] mt-2">Monetized Link Infrastructure</p>
+      <footer className="bg-slate-900 py-16 px-4 text-center">
+         <div className="flex items-center justify-center space-x-2 mb-4">
+            <div className="w-6 h-6 bg-indigo-600 rounded flex items-center justify-center shadow-lg">
+              <LinkIcon className="text-white w-3 h-3" />
+            </div>
+            <span className="text-xl font-black text-white uppercase tracking-tighter">{settings.siteName}</span>
+         </div>
+         <p className="text-slate-500 text-[9px] font-bold uppercase tracking-[0.4em]">Enterprise Monetized Infrastructure</p>
+         <div className="mt-8 pt-8 border-t border-white/5 max-w-sm mx-auto">
+            <p className="text-slate-600 text-[9px] font-bold uppercase tracking-widest">© 2026 SwiftLink Technologies. All Relays Encrypted.</p>
+         </div>
       </footer>
     </div>
   );
