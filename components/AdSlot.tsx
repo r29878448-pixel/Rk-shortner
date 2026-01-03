@@ -10,22 +10,30 @@ const AdSlot: React.FC<AdSlotProps> = ({ html, className = "" }) => {
   const adRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (adRef.current && html) {
-      // Create a range to properly execute scripts if present in the HTML string
+    if (adRef.current && html && html.trim() !== '') {
+      // Clear previous content
+      adRef.current.innerHTML = '';
+      
+      // Use contextual fragment to ensure <script> tags are executed by the browser
       const range = document.createRange();
       range.selectNode(adRef.current);
-      const documentFragment = range.createContextualFragment(html);
-      adRef.current.innerHTML = '';
-      adRef.current.appendChild(documentFragment);
+      try {
+        const documentFragment = range.createContextualFragment(html);
+        adRef.current.appendChild(documentFragment);
+      } catch (e) {
+        console.error("Ad injection error:", e);
+        // Fallback for simple HTML
+        adRef.current.innerHTML = html;
+      }
     }
   }, [html]);
 
-  if (!html) return null;
+  if (!html || html.trim() === '') return null;
 
   return (
     <div 
       ref={adRef} 
-      className={`ad-container overflow-hidden flex justify-center items-center ${className}`} 
+      className={`ad-container overflow-hidden min-h-[50px] flex justify-center items-center transition-all ${className}`} 
     />
   );
 };

@@ -11,7 +11,7 @@ import {
   ExternalLink
 } from 'lucide-react';
 import { SiteSettings, BlogPost, ClickEvent, Link, User, UserRole } from '../types.ts';
-import { DEMO_POSTS } from '../constants.tsx';
+import { DEMO_POSTS, DEFAULT_SETTINGS } from '../constants.tsx';
 import AdSlot from '../components/AdSlot.tsx';
 
 interface RedirectFlowProps {
@@ -28,13 +28,16 @@ const RedirectFlow: React.FC<RedirectFlowProps> = ({ settings, currentUser }) =>
   const [loading, setLoading] = useState(true);
   const [targetUrl, setTargetUrl] = useState('');
   const [linkId, setLinkId] = useState('');
+  const [ownerId, setOwnerId] = useState('');
   const [error, setError] = useState('');
   const [blogPost, setBlogPost] = useState<BlogPost>(DEMO_POSTS[0]);
   
   const bottomAnchorRef = useRef<HTMLDivElement>(null);
+  
+  // Load active settings to get correct CPM
+  const activeSettings: SiteSettings = JSON.parse(localStorage.getItem('swiftlink_settings') || JSON.stringify(DEFAULT_SETTINGS));
   const isAdmin = currentUser?.role === UserRole.ADMIN;
 
-  // The requested monetized link
   const monetizedLink = "https://www.effectivegatecpm.com/x7462fyue?key=967d606352d8c84667eba56789c7a043";
 
   useEffect(() => {
@@ -44,6 +47,7 @@ const RedirectFlow: React.FC<RedirectFlowProps> = ({ settings, currentUser }) =>
     if (link) {
       setTargetUrl(link.originalUrl);
       setLinkId(link.id);
+      setOwnerId(link.userId);
       const postIndex = (currentStep - 1) % DEMO_POSTS.length;
       setBlogPost(DEMO_POSTS[postIndex]);
       setTimeout(() => setLoading(false), 1200);
@@ -64,19 +68,41 @@ const RedirectFlow: React.FC<RedirectFlowProps> = ({ settings, currentUser }) =>
   const handleLogClick = () => {
     const clickEvent: ClickEvent = {
       id: Math.random().toString(36).substring(7),
-      linkId, shortCode: shortCode || 'unknown',
+      linkId, 
+      userId: ownerId,
+      shortCode: shortCode || 'unknown',
       timestamp: new Date().toISOString(),
       referrer: document.referrer || 'Direct',
       userAgent: navigator.userAgent
     };
+    
+    // Save Click Event
     const events = JSON.parse(localStorage.getItem('swiftlink_click_events') || '[]');
     localStorage.setItem('swiftlink_click_events', JSON.stringify([clickEvent, ...events]));
 
+    // Update Link Stats & Earnings
     const storedLinks = JSON.parse(localStorage.getItem('swiftlink_global_links') || '[]');
-    const updatedLinks = storedLinks.map((l: Link) => 
-      l.id === linkId ? { ...l, clicks: (l.clicks || 0) + 1 } : l
-    );
+    const updatedLinks = storedLinks.map((l: Link) => {
+      if (l.id === linkId) {
+        const newClicks = (l.clicks || 0) + 1;
+        const newEarnings = (newClicks * activeSettings.cpmRate) / 1000;
+        return { ...l, clicks: newClicks, earnings: newEarnings };
+      }
+      return l;
+    });
     localStorage.setItem('swiftlink_global_links', JSON.stringify(updatedLinks));
+
+    // Update User Balance (Calculated dynamically usually, but we store for simplicity)
+    const users = JSON.parse(localStorage.getItem('swiftlink_registered_users') || '[]');
+    const updatedUsers = users.map((u: any) => {
+      if (u.profile.id === ownerId) {
+        const userLinks = updatedLinks.filter((l: Link) => l.userId === ownerId);
+        const totalBalance = userLinks.reduce((sum: number, l: Link) => sum + (l.earnings || 0), 0);
+        return { ...u, profile: { ...u.profile, balance: totalBalance } };
+      }
+      return u;
+    });
+    localStorage.setItem('swiftlink_registered_users', JSON.stringify(updatedUsers));
   };
 
   const handleNextStep = () => {
@@ -94,39 +120,25 @@ const RedirectFlow: React.FC<RedirectFlowProps> = ({ settings, currentUser }) =>
     }
   };
 
-  // Function to inject multiple ads into the long content
   const renderContentWithAds = () => {
     if (!blogPost.content) return null;
     const contentSegments = blogPost.content.split('\n\n');
     const adPool = settings.adSlots.contentAds;
-    
-    // Calculate ad placement interval
     const interval = Math.floor(contentSegments.length / (adPool.length + 1)) || 5;
     
     return contentSegments.map((segment, idx) => (
       <React.Fragment key={idx}>
         <p className="mb-8">{segment}</p>
-        
-        {/* Inject monetized hyperlink block directly into content segments */}
         {idx === 1 && (
           <div className="my-10 p-8 border-2 border-dashed border-indigo-200 rounded-3xl bg-indigo-50/20 text-center">
             <h4 className="text-xs font-black uppercase text-indigo-500 mb-3 tracking-widest">Recommended Resource</h4>
-            <a 
-              href={monetizedLink}
-              target="_blank" 
-              rel="noopener noreferrer"
-              className="text-xl font-black text-indigo-600 hover:text-indigo-800 transition underline decoration-2 underline-offset-4 leading-tight inline-block"
-            >
+            <a href={monetizedLink} target="_blank" rel="noopener noreferrer" className="text-xl font-black text-indigo-600 hover:text-indigo-800 transition underline decoration-2 underline-offset-4 leading-tight inline-block">
               Get Premium Content Rewards & Early Access →
             </a>
           </div>
         )}
-
         {!isAdmin && (idx + 1) % interval === 0 && (idx + 1) < contentSegments.length && (
-          <AdSlot 
-            html={adPool[Math.floor(idx / interval) % adPool.length]} 
-            className="my-12 p-4 bg-slate-50 border border-slate-100 rounded-lg shadow-inner" 
-          />
+          <AdSlot html={adPool[Math.floor(idx / interval) % adPool.length]} className="my-12 p-4 bg-slate-50 border border-slate-100 rounded-lg shadow-inner" />
         )}
       </React.Fragment>
     ));
@@ -154,30 +166,20 @@ const RedirectFlow: React.FC<RedirectFlowProps> = ({ settings, currentUser }) =>
       <div className="min-h-screen bg-white py-20 px-6 text-center flex flex-col items-center">
         {!isAdmin && <AdSlot html={settings.adSlots.top} className="w-full mb-12" />}
         <h2 className="text-4xl md:text-7xl font-black text-slate-900 mb-12 tracking-tighter uppercase leading-none">Redirect <br/> Ready</h2>
-        
         <div className="relative inline-flex items-center justify-center mb-12">
           <svg className="w-40 h-40 -rotate-90">
             <circle cx="80" cy="80" r="75" stroke="#f1f5f9" strokeWidth="8" fill="transparent" />
-            <circle cx="80" cy="80" r="75" stroke="#4f46e5" strokeWidth="8" fill="transparent"
-              strokeDasharray={471} strokeDashoffset={471 - (471 * (5 - timer)) / 5}
-              strokeLinecap="round" className="transition-all duration-1000 ease-linear" />
+            <circle cx="80" cy="80" r="75" stroke="#4f46e5" strokeWidth="8" fill="transparent" strokeDasharray={471} strokeDashoffset={471 - (471 * (5 - timer)) / 5} strokeLinecap="round" className="transition-all duration-1000 ease-linear" />
           </svg>
           <div className="absolute inset-0 flex flex-col items-center justify-center">
             <span className="text-4xl font-black text-indigo-600">{Math.max(0, timer)}</span>
           </div>
         </div>
-
         <div className="mb-10">
-           <a 
-             href={monetizedLink} 
-             target="_blank" 
-             rel="noopener noreferrer"
-             className="inline-flex items-center text-sm font-black text-indigo-600 hover:text-indigo-800 transition uppercase tracking-widest group"
-           >
+           <a href={monetizedLink} target="_blank" rel="noopener noreferrer" className="inline-flex items-center text-sm font-black text-indigo-600 hover:text-indigo-800 transition uppercase tracking-widest group">
              <ExternalLink className="w-4 h-4 mr-2 group-hover:scale-110 transition" /> Sponsored: Unlock Rewards
            </a>
         </div>
-        
         <div className="w-full max-w-sm">
           {timer > 0 ? (
             <div className="w-full py-5 bg-slate-100 text-slate-400 rounded-xl font-bold uppercase text-xs">Authenticating Destination...</div>
@@ -193,7 +195,6 @@ const RedirectFlow: React.FC<RedirectFlowProps> = ({ settings, currentUser }) =>
   return (
     <div className="min-h-screen bg-white font-sans text-slate-900">
       {!isAdmin && <AdSlot html={settings.adSlots.top} />}
-
       <div className="sticky top-0 z-[100] w-full bg-slate-900/95 backdrop-blur-md text-white border-b border-white/10 shadow-lg">
         <div className="max-w-7xl mx-auto px-6 py-3 flex justify-between items-center">
           <div className="flex items-center space-x-2">
@@ -206,68 +207,35 @@ const RedirectFlow: React.FC<RedirectFlowProps> = ({ settings, currentUser }) =>
           </div>
         </div>
       </div>
-
       <div className="max-w-4xl mx-auto p-6 md:p-14">
         <article className="prose prose-lg max-w-none text-slate-700">
           <div className="h-64 w-full rounded-2xl overflow-hidden mb-12 shadow-xl border-4 border-white">
             <img src={blogPost.imageUrl} className="w-full h-full object-cover" alt="Article Cover" />
           </div>
-
-          <h1 className="text-3xl md:text-5xl font-black mb-8 tracking-tight leading-tight uppercase">
-            {blogPost.title}
-          </h1>
-
+          <h1 className="text-3xl md:text-5xl font-black mb-8 tracking-tight leading-tight uppercase">{blogPost.title}</h1>
           <div className="flex items-center space-x-4 mb-12 pb-8 border-b border-slate-100">
              <div className="w-10 h-10 bg-slate-100 rounded-full flex items-center justify-center"><UserIcon className="w-5 h-5" /></div>
              <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{blogPost.author} • {blogPost.date}</div>
           </div>
-          
           <div className="bg-slate-900 rounded-2xl p-8 md:p-12 text-white shadow-xl my-12 relative overflow-hidden text-center">
-            <h3 className="text-xl font-black mb-4 flex items-center justify-center uppercase">
-              <ShieldCheck className="mr-3 w-6 h-6 text-indigo-400" /> Verify Your Session
-            </h3>
+            <h3 className="text-xl font-black mb-4 flex items-center justify-center uppercase"><ShieldCheck className="mr-3 w-6 h-6 text-indigo-400" /> Verify Your Session</h3>
             <p className="text-slate-400 text-xs mb-6 font-medium">Please confirm your session and scroll down to continue.</p>
-            
-            <div className="mb-8">
-               <a 
-                 href={monetizedLink} 
-                 target="_blank" 
-                 rel="noopener noreferrer"
-                 className="inline-flex items-center text-[9px] font-black text-indigo-400 hover:text-white transition uppercase tracking-[0.3em] border border-indigo-500/30 px-4 py-2 rounded-full"
-               >
-                 <ExternalLink className="w-3 h-3 mr-2" /> Sponsored: Get Rewards Here
-               </a>
-            </div>
-
             {!isTimerActive ? (
               <button onClick={handleStartVerify} className="w-full bg-white text-slate-900 py-4 rounded-xl font-black uppercase text-xs tracking-widest shadow-lg">Confirm session</button>
             ) : (
               <div className="flex flex-col items-center space-y-4">
                 <span className="text-3xl font-black text-indigo-400">{timer}s</span>
-                <p className="text-[9px] font-bold uppercase tracking-[0.3em] text-slate-500 animate-pulse flex items-center">
-                  Scroll for next gateway <ArrowDown className="ml-2 w-4 h-4" />
-                </p>
+                <p className="text-[9px] font-bold uppercase tracking-[0.3em] text-slate-500 animate-pulse flex items-center">Scroll for next gateway <ArrowDown className="ml-2 w-4 h-4" /></p>
               </div>
             )}
           </div>
-
           <div className="text-lg md:text-xl leading-relaxed text-justify space-y-8">
             {renderContentWithAds()}
           </div>
-
           <div className="flex flex-col items-center pt-20 border-t border-slate-100 mt-20" ref={bottomAnchorRef}>
-             <button 
-               onClick={handleNextStep}
-               disabled={!isTimerActive || timer > 0}
-               className={`w-full md:w-auto px-16 py-6 rounded-xl text-xl font-black uppercase tracking-tight transition-all ${
-                 isTimerActive && timer <= 0 ? 'bg-indigo-600 text-white shadow-xl hover:bg-indigo-700' : 'bg-slate-100 text-slate-300'
-               }`}
-             >
+             <button onClick={handleNextStep} disabled={!isTimerActive || timer > 0} className={`w-full md:w-auto px-16 py-6 rounded-xl text-xl font-black uppercase tracking-tight transition-all ${isTimerActive && timer <= 0 ? 'bg-indigo-600 text-white shadow-xl hover:bg-indigo-700' : 'bg-slate-100 text-slate-300'}`}>
                {timer > 0 ? (isTimerActive ? `Wait ${timer}s` : 'Start at Top') : 'Proceed to Gateway'}
              </button>
-             <p className="mt-8 text-[9px] font-black text-slate-400 uppercase tracking-widest">
-               Protocol {currentStep} of {settings.totalSteps} complete
-             </p>
           </div>
         </article>
       </div>

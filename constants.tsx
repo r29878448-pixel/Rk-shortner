@@ -19,7 +19,16 @@ export const DEFAULT_SETTINGS: SiteSettings = {
     '<div style="padding: 50px; background: #db2777; border-radius: 30px; color: white; text-align: center; font-weight: 900; margin: 40px 0;">STAGE 3 INTERSTITIAL AD</div>'
   ],
   redirectDelay: 10,
-  totalSteps: 3
+  totalSteps: 3,
+  planConfig: {
+    freeLimit: 5,
+    proLimit: 50,
+    businessLimit: 1000000,
+    proPrice: 199,
+    businessPrice: 999
+  },
+  telegramBotUrl: 'https://t.me/SwiftLinkBot',
+  cpmRate: 150 // ₹150 per 1000 clicks
 };
 
 const generateEndlessContent = (topic: string) => {

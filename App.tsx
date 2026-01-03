@@ -15,22 +15,22 @@ import {
   Terminal,
   Zap,
   Cpu,
-  ExternalLink
+  ExternalLink,
+  CreditCard,
+  Wallet
 } from 'lucide-react';
-import { User, SiteSettings } from './types.ts';
+import { User, SiteSettings, SubscriptionPlan } from './types.ts';
 import { DEFAULT_SETTINGS } from './constants.tsx';
 
 // Views
 import HomePage from './views/HomePage.tsx';
 import AdminDashboard from './views/AdminDashboard.tsx';
+import UserDashboard from './views/UserDashboard.tsx';
 import RedirectFlow from './views/RedirectFlow.tsx';
 import LoginPage from './views/LoginPage.tsx';
 import BlogPage from './views/BlogPage.tsx';
+import PricingPage from './views/PricingPage.tsx';
 
-/**
- * VP Links Style API Handler
- * Optimized for machine-reading and platform validation.
- */
 const ApiHandler = () => {
   const location = useLocation();
   const navigate = useNavigate();
@@ -45,100 +45,85 @@ const ApiHandler = () => {
 
     if (api && url) {
       const storedUserString = localStorage.getItem('swiftlink_user');
-      const storedUser = storedUserString ? JSON.parse(storedUserString) : null;
+      const currentUser = storedUserString ? JSON.parse(storedUserString) : null;
+      const settings: SiteSettings = JSON.parse(localStorage.getItem('swiftlink_settings') || JSON.stringify(DEFAULT_SETTINGS));
+
+      if (!currentUser || currentUser.apiKey !== api) {
+        setError('AUTH_ERROR: Invalid API Token.');
+        return;
+      }
+
+      const existing = JSON.parse(localStorage.getItem('swiftlink_global_links') || '[]');
+      const userCount = existing.filter((l: any) => l.userId === currentUser.id).length;
       
-      if (!storedUser || storedUser.apiKey !== api) {
-        setError('ERROR: Authentication failed. Key mismatch.');
+      let limit = settings.planConfig.freeLimit;
+      if (currentUser.plan === SubscriptionPlan.PRO) limit = settings.planConfig.proLimit;
+      if (currentUser.plan === SubscriptionPlan.BUSINESS) limit = settings.planConfig.businessLimit;
+
+      if (userCount >= limit) {
+        setError('QUOTA_EXCEEDED: Plan limit reached. Upgrade required.');
         return;
       }
 
       const shortCode = Math.random().toString(36).substring(2, 9);
       const newLink = {
         id: Math.random().toString(36).substring(7),
-        userId: storedUser.id,
+        userId: currentUser.id,
         originalUrl: url,
         shortCode,
         clicks: 0,
+        earnings: 0,
         createdAt: new Date()
       };
       
-      const existing = JSON.parse(localStorage.getItem('swiftlink_global_links') || '[]');
       localStorage.setItem('swiftlink_global_links', JSON.stringify([newLink, ...existing]));
-      
-      // Clean base URL calculation
       const baseUrl = window.location.origin + window.location.pathname.split('#')[0];
       const finalResult = `${baseUrl}#/s/${shortCode}`;
       setResult(finalResult);
     } else if (location.search !== '') {
-      setError('ERROR: Missing parameters (api & url required)');
+      setError('PARAM_ERROR: api & url required.');
     }
   }, [location]);
 
-  // If a platform is checking for a raw string, we provide a clean pre-tag layout
   if (result && location.search.includes('format=raw')) {
     return <div className="api-raw-response">{result}</div>;
   }
 
   return (
     <div className="min-h-screen bg-slate-900 flex items-center justify-center p-6 text-white font-sans">
-      <div className="max-w-2xl w-full bg-white/5 border border-white/10 p-12 md:p-16 rounded-[3rem] backdrop-blur-3xl shadow-[0_0_100px_rgba(79,70,229,0.1)]">
+      <div className="max-w-2xl w-full bg-white/5 border border-white/10 p-16 rounded-[3rem] backdrop-blur-3xl">
         <div className="flex items-center justify-center space-x-4 mb-12">
-           <div className="w-16 h-16 bg-indigo-600 rounded-2xl flex items-center justify-center shadow-2xl shadow-indigo-500/20 transform -rotate-6">
+           <div className="w-16 h-16 bg-indigo-600 rounded-2xl flex items-center justify-center">
               <Terminal className="text-white w-8 h-8" />
            </div>
            <div>
               <h2 className="text-3xl font-black uppercase tracking-tighter">Relay API</h2>
-              <p className="text-indigo-400 text-[10px] font-black uppercase tracking-[0.4em]">Integration Terminal</p>
+              <p className="text-indigo-400 text-[10px] font-black uppercase tracking-[0.4em]">Node Integration</p>
            </div>
         </div>
-        
-        {error && (
-          <div className="p-8 bg-red-500/10 border border-red-500/20 text-red-400 rounded-3xl text-sm font-bold leading-relaxed mb-6 text-center">
-            {error}
-          </div>
-        )}
-        
+        {error && <div className="p-8 bg-red-500/10 border border-red-500/20 text-red-400 rounded-3xl text-sm font-bold text-center mb-6">{error}</div>}
         {result ? (
-          <div className="space-y-8 animate-in text-center">
-            <div className="inline-flex items-center bg-green-500/20 text-green-400 px-4 py-2 rounded-full text-[10px] font-black uppercase tracking-[0.2em] mb-4">
-               <Zap className="w-3 h-3 mr-2" /> Node Validated
-            </div>
-            <div className="bg-white/10 p-10 rounded-[2.5rem] border border-white/10 font-mono text-indigo-300 text-lg break-all leading-relaxed shadow-inner">
-               {result}
-            </div>
-            <button 
-              onClick={() => { navigator.clipboard.writeText(result || ''); setIsCopied(true); setTimeout(() => setIsCopied(false), 2000); }}
-              className="w-full py-6 bg-white text-slate-900 rounded-[2rem] font-black uppercase text-sm tracking-[0.2em] shadow-2xl hover:bg-indigo-50 transition active:scale-95 flex items-center justify-center gap-4"
-            >
-              {isCopied ? <Check className="w-6 h-6 text-green-600" /> : <Copy className="w-6 h-6" />}
+          <div className="space-y-8 text-center animate-in">
+            <div className="bg-white/10 p-10 rounded-[2.5rem] border border-white/10 font-mono text-indigo-300 text-lg break-all">{result}</div>
+            <button onClick={() => { navigator.clipboard.writeText(result || ''); setIsCopied(true); setTimeout(() => setIsCopied(false), 2000); }} className="w-full py-6 bg-white text-slate-900 rounded-[2rem] font-black uppercase text-sm tracking-widest shadow-2xl active:scale-95 transition">
               {isCopied ? 'Link Copied' : 'Copy API Result'}
             </button>
           </div>
         ) : !error && (
-          <div className="text-center py-10">
-             <div className="flex justify-center mb-6">
-                <Loader2 className="w-12 h-12 text-indigo-500 animate-spin" />
-             </div>
-             <p className="text-slate-400 font-bold uppercase tracking-widest text-xs">Awaiting Request...</p>
+          <div className="text-center py-10 opacity-50">
+             <div className="flex justify-center mb-6"><Cpu className="w-12 h-12 text-indigo-500 animate-pulse" /></div>
+             <p className="text-slate-400 font-bold uppercase tracking-widest text-xs">Waiting for programmatic request...</p>
           </div>
         )}
-        
         <div className="mt-16 pt-10 border-t border-white/5 flex flex-col items-center gap-4">
-           <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest text-center">
-              Protocol: GET Link Relay v2.6.1
-           </p>
-           <button onClick={() => navigate('/')} className="flex items-center text-indigo-400 hover:text-white transition text-[11px] font-black uppercase tracking-[0.2em]">
-            <ChevronLeft className="w-4 h-4 mr-2" /> Back to Home
+           <button onClick={() => navigate('/')} className="text-indigo-400 hover:text-white transition text-[11px] font-black uppercase tracking-[0.2em]">
+            <ChevronLeft className="w-4 h-4 mr-2" /> Back to Terminal
           </button>
         </div>
       </div>
     </div>
   );
 };
-
-const Loader2 = ({ className }: { className?: string }) => (
-  <svg className={className} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>
-);
 
 interface GlobalLayoutProps {
   children: React.ReactNode;
@@ -170,16 +155,21 @@ const GlobalLayout: React.FC<GlobalLayoutProps> = ({ children, settings, current
             </div>
             
             <div className="hidden md:flex items-center space-x-8">
-              <RouterLink to="/" className="text-[11px] font-black text-slate-600 hover:text-indigo-600 uppercase tracking-[0.2em] transition">Dashboard</RouterLink>
+              <RouterLink to="/" className="text-[11px] font-black text-slate-600 hover:text-indigo-600 uppercase tracking-[0.2em] transition">Create</RouterLink>
               <RouterLink to="/blog" className="text-[11px] font-black text-slate-600 hover:text-indigo-600 uppercase tracking-[0.2em] transition">Insights</RouterLink>
+              <RouterLink to="/pricing" className="text-[11px] font-black text-slate-600 hover:text-indigo-600 uppercase tracking-[0.2em] transition">Plans</RouterLink>
               
               {currentUser ? (
                 <div className="flex items-center space-x-6 border-l pl-8 border-slate-200">
-                  <RouterLink to="/admin" className="text-[11px] font-black text-white bg-indigo-600 px-6 py-3 rounded-xl uppercase tracking-[0.2em] shadow-lg hover:bg-indigo-700 transition">Admin Area</RouterLink>
+                  {currentUser.role === 'ADMIN' ? (
+                    <RouterLink to="/admin" className="text-[11px] font-black text-white bg-indigo-600 px-6 py-3 rounded-xl uppercase tracking-[0.2em] shadow-lg">Network Node</RouterLink>
+                  ) : (
+                    <RouterLink to="/dashboard" className="text-[11px] font-black text-white bg-slate-900 px-6 py-3 rounded-xl uppercase tracking-[0.2em] shadow-lg flex items-center"><Wallet className="w-3 h-3 mr-2" /> Dashboard</RouterLink>
+                  )}
                   <button onClick={handleLogout} className="text-[11px] font-black text-red-500 uppercase tracking-[0.2em] hover:text-red-700 transition">Logout</button>
                 </div>
               ) : (
-                <RouterLink to="/login" className="text-[11px] font-black text-slate-900 border-2 border-slate-900 px-6 py-3 rounded-xl uppercase tracking-[0.2em] hover:bg-slate-900 hover:text-white transition">Login</RouterLink>
+                <RouterLink to="/login" className="text-[11px] font-black text-slate-900 border-2 border-slate-900 px-6 py-3 rounded-xl uppercase tracking-[0.2em] hover:bg-slate-900 hover:text-white transition">Login Area</RouterLink>
               )}
             </div>
 
@@ -190,22 +180,10 @@ const GlobalLayout: React.FC<GlobalLayoutProps> = ({ children, settings, current
             </div>
           </div>
         </div>
-
-        {isMenuOpen && (
-          <div className="md:hidden bg-white border-t border-slate-200 shadow-2xl py-8 px-6 space-y-4">
-            <RouterLink to="/" className="block py-4 font-black uppercase text-xs tracking-widest text-slate-900 border-b border-slate-50" onClick={() => setIsMenuOpen(false)}>Dashboard</RouterLink>
-            <RouterLink to="/blog" className="block py-4 font-black uppercase text-xs tracking-widest text-slate-900 border-b border-slate-50" onClick={() => setIsMenuOpen(false)}>Insights</RouterLink>
-            {currentUser && (
-              <RouterLink to="/admin" className="block py-6 font-black uppercase text-xs tracking-widest text-indigo-600" onClick={() => setIsMenuOpen(false)}>Admin Station</RouterLink>
-            )}
-            {!currentUser && (
-              <RouterLink to="/login" className="block py-6 font-black uppercase text-xs tracking-widest text-slate-900" onClick={() => setIsMenuOpen(false)}>Login Area</RouterLink>
-            )}
-          </div>
-        )}
       </nav>
 
       <main className="flex-grow">{children}</main>
+      
       <footer className="bg-slate-900 py-20 px-4 text-center">
          <div className="flex items-center justify-center space-x-3 mb-6">
             <div className="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center shadow-2xl shadow-indigo-500/20">
@@ -213,10 +191,9 @@ const GlobalLayout: React.FC<GlobalLayoutProps> = ({ children, settings, current
             </div>
             <span className="text-2xl font-black text-white uppercase tracking-tighter">{settings.siteName}</span>
          </div>
-         <p className="text-slate-500 text-[10px] font-black uppercase tracking-[0.5em] mb-10">Enterprise Redirect Infrastructure</p>
-         
-         <div className="mt-12 pt-10 border-t border-white/5 max-w-xl mx-auto flex flex-col items-center gap-4">
-            <p className="text-slate-600 text-[10px] font-bold uppercase tracking-widest">© 2026 SwiftLink Cloud. All Rights Reserved.</p>
+         <p className="text-slate-500 text-[10px] font-black uppercase tracking-[0.5em] mb-10">Multi-User Monetization Infrastructure</p>
+         <div className="pt-10 border-t border-white/5 max-w-xl mx-auto">
+            <p className="text-slate-600 text-[10px] font-bold uppercase tracking-widest">© 2026 SwiftLink Cloud. Strictly No Ads on Dashboard nodes.</p>
          </div>
       </footer>
     </div>
@@ -243,10 +220,12 @@ const App: React.FC = () => {
     <HashRouter>
       <GlobalLayout settings={settings} currentUser={currentUser} handleLogout={handleLogout}>
         <Routes>
-          <Route path="/" element={<HomePage siteName={settings.siteName} settings={settings} />} />
+          <Route path="/" element={<HomePage siteName={settings.siteName} settings={settings} currentUser={currentUser} />} />
           <Route path="/login" element={<LoginPage onAuth={setCurrentUser} />} />
+          <Route path="/pricing" element={<PricingPage />} />
           <Route path="/blog" element={<BlogPage />} />
           <Route path="/api" element={<ApiHandler />} />
+          <Route path="/dashboard" element={<UserDashboard user={currentUser} />} />
           <Route path="/admin" element={<AdminDashboard user={currentUser} settings={settings} onUpdateSettings={setSettings} />} />
           <Route path="/s/:shortCode" element={<RedirectFlow settings={settings} currentUser={currentUser} />} />
         </Routes>

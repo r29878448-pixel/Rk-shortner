@@ -1,8 +1,8 @@
 
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Link as LinkIcon, Mail, Lock, Loader2, Zap } from 'lucide-react';
-import { User, UserRole, SubscriptionPlan } from '../types';
+import { Link as LinkIcon, Mail, Lock, Loader2, UserPlus, LogIn } from 'lucide-react';
+import { User, UserRole, SubscriptionPlan } from '../types.ts';
 
 interface LoginPageProps {
   onAuth: (user: User) => void;
@@ -14,9 +14,11 @@ const LoginPage: React.FC<LoginPageProps> = ({ onAuth }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
+  const [isRegistering, setIsRegistering] = useState(false);
 
-  const MASTER_EMAIL = 'admin@swiftlink.pro';
-  const MASTER_PASS = 'admin786';
+  // New Master Credentials
+  const MASTER_EMAIL = 'r29878448@gmail.com';
+  const MASTER_PASS = 'Mnbvcxzlk';
 
   const generateAlphanumericKey = () => {
     const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
@@ -35,77 +37,78 @@ const LoginPage: React.FC<LoginPageProps> = ({ onAuth }) => {
       const isAdmin = email === MASTER_EMAIL && password === MASTER_PASS;
       
       if (isAdmin) {
-        // Ensure we always have an alphanumeric key for the admin
-        let storedUser = localStorage.getItem('swiftlink_user');
-        let apiKey = '';
-        
-        if (storedUser) {
-          const parsed = JSON.parse(storedUser);
-          apiKey = parsed.apiKey.startsWith('sk_live_') ? parsed.apiKey : generateAlphanumericKey();
-        } else {
-          apiKey = generateAlphanumericKey();
-        }
-
-        const mockUser: User = {
-          id: 'master-admin',
+        const adminUser: User = {
+          id: 'admin-root',
           email,
           role: UserRole.ADMIN,
           plan: SubscriptionPlan.BUSINESS,
-          apiKey: apiKey,
+          apiKey: generateAlphanumericKey(),
           createdAt: new Date(),
           isSuspended: false
         };
-        
-        localStorage.setItem('swiftlink_user', JSON.stringify(mockUser));
-        onAuth(mockUser);
+        localStorage.setItem('swiftlink_user', JSON.stringify(adminUser));
+        onAuth(adminUser);
         navigate('/admin');
+      } else if (isRegistering) {
+        // Handle User Registration
+        const newUser: User = {
+          id: Math.random().toString(36).substring(7),
+          email,
+          role: UserRole.USER,
+          plan: SubscriptionPlan.FREE,
+          apiKey: generateAlphanumericKey(),
+          createdAt: new Date(),
+          isSuspended: false
+        };
+        // Simulated persistence
+        const users = JSON.parse(localStorage.getItem('swiftlink_registered_users') || '[]');
+        users.push({ email, password, profile: newUser });
+        localStorage.setItem('swiftlink_registered_users', JSON.stringify(users));
+        localStorage.setItem('swiftlink_user', JSON.stringify(newUser));
+        onAuth(newUser);
+        navigate('/dashboard');
       } else {
-        alert('Access Denied: Invalid Master Credentials');
+        // Handle Standard User Login
+        const users = JSON.parse(localStorage.getItem('swiftlink_registered_users') || '[]');
+        const found = users.find((u: any) => u.email === email && u.password === password);
+        
+        if (found) {
+          localStorage.setItem('swiftlink_user', JSON.stringify(found.profile));
+          onAuth(found.profile);
+          navigate('/dashboard');
+        } else {
+          alert('Access Denied: Invalid Credentials');
+        }
       }
       setLoading(false);
     }, 800);
   };
 
-  const autoFill = () => {
-    setEmail(MASTER_EMAIL);
-    setPassword(MASTER_PASS);
-  };
-
   return (
     <div className="min-h-[85vh] flex items-center justify-center px-4 bg-slate-50">
       <div className="max-w-md w-full">
-        <div className="mb-6 p-6 bg-white border border-slate-200 rounded-[2rem] shadow-sm flex flex-col items-center text-center">
-          <div className="w-10 h-10 bg-amber-100 rounded-full flex items-center justify-center mb-3">
-            <Zap className="text-amber-600 w-5 h-5" />
-          </div>
-          <h3 className="font-black text-slate-800 text-sm uppercase tracking-widest mb-2">Master Access</h3>
-          <p className="text-xs text-slate-500 mb-4 font-medium">Use the button below to instantly fill your private administrative credentials.</p>
-          <button 
-            onClick={autoFill}
-            className="w-full py-3 bg-slate-100 text-slate-700 rounded-xl font-bold text-xs uppercase tracking-widest hover:bg-indigo-600 hover:text-white transition shadow-sm"
-          >
-            Auto-fill Master Admin
-          </button>
-        </div>
-
         <div className="bg-white rounded-[2.5rem] p-10 shadow-2xl shadow-indigo-100/40 border border-slate-100">
           <div className="text-center mb-10">
-            <div className="inline-flex w-20 h-20 gradient-bg rounded-3xl items-center justify-center mb-6 shadow-2xl shadow-indigo-200 transform hover:rotate-6 transition">
+            <div className="inline-flex w-20 h-20 bg-indigo-600 rounded-3xl items-center justify-center mb-6 shadow-2xl shadow-indigo-200">
               <LinkIcon className="text-white w-10 h-10" />
             </div>
-            <h1 className="text-3xl font-black text-slate-900 tracking-tight">Terminal Login</h1>
-            <p className="text-slate-400 text-xs font-bold uppercase tracking-[0.2em] mt-2">Restricted System Area</p>
+            <h1 className="text-3xl font-black text-slate-900 tracking-tight">
+              {isRegistering ? 'Create Account' : 'Terminal Login'}
+            </h1>
+            <p className="text-slate-400 text-xs font-bold uppercase tracking-[0.2em] mt-2">
+              {isRegistering ? 'Join the network' : 'Restricted System Area'}
+            </p>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-6">
             <div>
-              <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 px-1">Admin Identity</label>
+              <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 px-1">Email Identity</label>
               <div className="relative">
                 <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-300" />
                 <input 
                   type="email" 
                   required
-                  placeholder="admin@swiftlink.pro" 
+                  placeholder="name@example.com" 
                   className="w-full pl-12 pr-4 py-4 border border-slate-100 bg-slate-50/50 rounded-2xl focus:ring-2 focus:ring-indigo-500 focus:outline-none transition font-medium"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
@@ -130,21 +133,29 @@ const LoginPage: React.FC<LoginPageProps> = ({ onAuth }) => {
             <button 
               type="submit" 
               disabled={loading}
-              className="w-full py-5 gradient-bg text-white rounded-2xl font-black text-xl hover:opacity-90 transition shadow-xl shadow-indigo-100 flex items-center justify-center group"
+              className="w-full py-5 bg-indigo-600 text-white rounded-2xl font-black text-xl hover:bg-indigo-700 transition shadow-xl shadow-indigo-100 flex items-center justify-center"
             >
               {loading ? (
                 <Loader2 className="w-7 h-7 animate-spin" />
               ) : (
                 <div className="flex items-center">
-                  Enter Dashboard <span className="ml-2">→</span>
+                  {isRegistering ? 'Create Profile' : 'Enter Dashboard'} <span className="ml-2">→</span>
                 </div>
               )}
             </button>
           </form>
 
-          <div className="mt-10 pt-8 border-t border-slate-50 flex items-center justify-center space-x-2 text-[10px] font-bold text-slate-300 uppercase tracking-[0.3em]">
-             <div className="w-1.5 h-1.5 rounded-full bg-slate-200"></div>
-             <span>Encrypted Session</span>
+          <div className="mt-8 text-center">
+            <button 
+              onClick={() => setIsRegistering(!isRegistering)}
+              className="text-[11px] font-black uppercase tracking-widest text-slate-400 hover:text-indigo-600 transition flex items-center justify-center mx-auto"
+            >
+              {isRegistering ? (
+                <><LogIn className="w-4 h-4 mr-2" /> Already have an account? Login</>
+              ) : (
+                <><UserPlus className="w-4 h-4 mr-2" /> New user? Start free</>
+              )}
+            </button>
           </div>
         </div>
       </div>

@@ -18,6 +18,8 @@ export interface User {
   apiKey: string;
   createdAt: Date;
   isSuspended: boolean;
+  pendingUpgrade?: SubscriptionPlan;
+  balance?: number; // Total earnings in currency
 }
 
 export interface Link {
@@ -29,15 +31,26 @@ export interface Link {
   expiryDate?: Date;
   clicks: number;
   createdAt: Date;
+  earnings?: number; // Earnings specific to this link
 }
 
 export interface ClickEvent {
   id: string;
   linkId: string;
+  userId: string; // Track who the link belongs to
   shortCode: string;
   timestamp: string;
   referrer: string;
   userAgent: string;
+  ip?: string; // For fraud detection (simulated)
+}
+
+export interface PlanConfig {
+  freeLimit: number;
+  proLimit: number;
+  businessLimit: number;
+  proPrice: number;
+  businessPrice: number;
 }
 
 export interface SiteSettings {
@@ -47,11 +60,14 @@ export interface SiteSettings {
     top: string;
     middle: string;
     bottom: string;
-    contentAds: string[]; // Added support for multiple mid-article ads
+    contentAds: string[];
   };
   stepAds: string[]; 
   redirectDelay: number; 
   totalSteps: number; 
+  planConfig: PlanConfig;
+  telegramBotUrl: string;
+  cpmRate: number; // Payment per 1000 clicks
 }
 
 export interface BlogPost {
