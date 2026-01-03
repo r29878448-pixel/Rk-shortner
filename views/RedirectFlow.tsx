@@ -7,15 +7,16 @@ import {
   AlertCircle,
   ArrowDown
 } from 'lucide-react';
-import { SiteSettings, BlogPost, ClickEvent, Link } from '../types.ts';
+import { SiteSettings, BlogPost, ClickEvent, Link, User, UserRole } from '../types.ts';
 import { DEMO_POSTS } from '../constants.tsx';
 import AdSlot from '../components/AdSlot.tsx';
 
 interface RedirectFlowProps {
   settings: SiteSettings;
+  currentUser: User | null;
 }
 
-const RedirectFlow: React.FC<RedirectFlowProps> = ({ settings }) => {
+const RedirectFlow: React.FC<RedirectFlowProps> = ({ settings, currentUser }) => {
   const { shortCode } = useParams();
   const [currentStep, setCurrentStep] = useState(1);
   const [isFinalStep, setIsFinalStep] = useState(false);
@@ -29,6 +30,9 @@ const RedirectFlow: React.FC<RedirectFlowProps> = ({ settings }) => {
   
   const bottomAnchorRef = useRef<HTMLDivElement>(null);
 
+  // If the user is an admin, they should NOT see ads.
+  const isAdmin = currentUser?.role === UserRole.ADMIN;
+
   useEffect(() => {
     const storedLinks = JSON.parse(localStorage.getItem('swiftlink_global_links') || '[]');
     const link = storedLinks.find((l: any) => l.shortCode === shortCode);
@@ -36,12 +40,12 @@ const RedirectFlow: React.FC<RedirectFlowProps> = ({ settings }) => {
     if (link) {
       setTargetUrl(link.originalUrl);
       setLinkId(link.id);
-      // Ensure different blog per step
+      // Different massive blog per step
       const postIndex = (currentStep - 1) % DEMO_POSTS.length;
       setBlogPost(DEMO_POSTS[postIndex]);
       setTimeout(() => setLoading(false), 800);
     } else {
-      setError('Session timed out or the link is invalid.');
+      setError('Secure Session Expired.');
     }
   }, [shortCode, currentStep]);
 
@@ -91,182 +95,180 @@ const RedirectFlow: React.FC<RedirectFlowProps> = ({ settings }) => {
   };
 
   if (loading) return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-white p-6">
-      <Loader2 className="w-16 h-16 text-indigo-600 animate-spin mb-6" />
-      <h2 className="text-xl font-black text-slate-900 uppercase tracking-widest">Encrypting Session...</h2>
+    <div className="min-h-screen flex flex-col items-center justify-center bg-white">
+      <Loader2 className="w-20 h-20 text-indigo-600 animate-spin mb-8" />
+      <h2 className="text-2xl font-black text-slate-900 uppercase tracking-[0.5em]">Establishing Secure Relay</h2>
     </div>
   );
 
   if (error) return (
-    <div className="min-h-screen flex items-center justify-center bg-slate-50 p-6">
-      <div className="max-w-md w-full bg-white p-12 rounded-[3rem] shadow-2xl text-center border border-slate-100">
-        <AlertCircle className="w-16 h-16 text-red-500 mx-auto mb-6" />
-        <h2 className="text-2xl font-black mb-10 text-slate-900 uppercase tracking-tighter">Connection Failed</h2>
-        <a href="/#/" className="block w-full py-5 bg-slate-900 text-white rounded-2xl font-black shadow-lg">Back to Safety</a>
+    <div className="min-h-screen flex items-center justify-center bg-slate-50 p-10">
+      <div className="max-w-md w-full bg-white p-16 rounded-[4rem] shadow-2xl text-center border-4 border-slate-100">
+        <AlertCircle className="w-24 h-24 text-red-500 mx-auto mb-10" />
+        <h2 className="text-3xl font-black mb-10 text-slate-900 uppercase tracking-tighter">Connection Lost</h2>
+        <a href="/#/" className="block w-full py-6 bg-slate-900 text-white rounded-[2rem] font-black uppercase text-xs tracking-widest shadow-xl">Return to Dashboard</a>
       </div>
     </div>
   );
 
   if (isFinalStep) {
     return (
-      <div className="min-h-screen bg-white py-20 px-6 text-center flex flex-col items-center">
-        <AdSlot html={settings.adSlots.top} className="w-full mb-12" />
+      <div className="min-h-screen bg-white py-32 px-10 text-center flex flex-col items-center">
+        {!isAdmin && <AdSlot html={settings.adSlots.top} className="w-full mb-20" />}
         
-        <h2 className="text-6xl font-black text-slate-900 mb-12 tracking-tighter uppercase">Verification <br/> Successful</h2>
+        <h2 className="text-7xl md:text-9xl font-black text-slate-900 mb-20 tracking-tighter uppercase leading-[0.8]">PATH <br/> UNLOCKED</h2>
         
-        <div className="relative inline-flex items-center justify-center mb-16 scale-125">
-          <svg className="w-56 h-56 -rotate-90">
-            <circle cx="112" cy="112" r="105" stroke="#f1f5f9" strokeWidth="10" fill="transparent" />
+        <div className="relative inline-flex items-center justify-center mb-24 scale-150">
+          <svg className="w-64 h-64 -rotate-90">
+            <circle cx="128" cy="128" r="120" stroke="#f1f5f9" strokeWidth="12" fill="transparent" />
             <circle
-              cx="112" cy="112" r="105"
-              stroke="#4f46e5" strokeWidth="10" fill="transparent"
-              strokeDasharray={660}
-              strokeDashoffset={660 - (660 * (5 - timer)) / 5}
+              cx="128" cy="128" r="120"
+              stroke="#4f46e5" strokeWidth="12" fill="transparent"
+              strokeDasharray={754}
+              strokeDashoffset={754 - (754 * (5 - timer)) / 5}
               strokeLinecap="round"
               className="transition-all duration-1000 ease-linear"
             />
           </svg>
           <div className="absolute inset-0 flex flex-col items-center justify-center">
-            <span className="text-6xl font-black text-indigo-600">{Math.max(0, timer)}</span>
+            <span className="text-7xl font-black text-indigo-600">{Math.max(0, timer)}</span>
           </div>
         </div>
         
-        <div className="w-full max-w-sm">
+        <div className="w-full max-w-md">
           {timer > 0 ? (
-            <button disabled className="w-full py-7 bg-slate-100 text-slate-300 rounded-3xl font-black uppercase text-xl border-4 border-dashed border-slate-200">Relaying...</button>
+            <button disabled className="w-full py-8 bg-slate-100 text-slate-300 rounded-[2.5rem] font-black uppercase text-xl border-4 border-dashed border-slate-200">DECRYPTING...</button>
           ) : (
             <a 
               href={targetUrl} 
               onClick={handleLogClick}
-              className="block w-full py-7 bg-indigo-600 text-white rounded-3xl font-black text-2xl shadow-2xl animate-bounce hover:bg-indigo-700 transition"
+              className="block w-full py-10 bg-indigo-600 text-white rounded-[3rem] font-black text-3xl shadow-2xl animate-bounce hover:bg-indigo-700 transition tracking-tighter uppercase"
             >
-              ACCESS LINK NOW
+              GO TO DESTINATION
             </a>
           )}
         </div>
         
-        <AdSlot html={settings.adSlots.bottom} className="w-full mt-24" />
+        {!isAdmin && <AdSlot html={settings.adSlots.bottom} className="w-full mt-32" />}
       </div>
     );
   }
 
   return (
     <div className="min-h-screen bg-white font-sans text-slate-900">
-      {/* Top Automated Ad */}
-      <AdSlot html={settings.adSlots.top} />
+      {/* Top Automated Ad - Visible only to regular users */}
+      {!isAdmin && <AdSlot html={settings.adSlots.top} />}
 
-      {/* Step Indicator Sticky */}
-      <div className="sticky top-[10px] z-[100] w-full flex justify-center pointer-events-none">
-        <div className="bg-slate-900 text-white px-10 py-4 rounded-full shadow-2xl flex items-center space-x-6 border-2 border-white/20 pointer-events-auto backdrop-blur-xl">
-          <span className="text-[10px] font-black uppercase tracking-[0.5em] opacity-50">Process</span>
-          <div className="h-4 w-px bg-white/30"></div>
-          <span className="text-indigo-400 font-black text-xl uppercase tracking-tighter">Stage {currentStep} OF {settings.totalSteps}</span>
+      <div className="sticky top-4 z-[100] w-full flex justify-center pointer-events-none">
+        <div className="bg-slate-900 text-white px-12 py-5 rounded-full shadow-2xl flex items-center space-x-8 border-4 border-white/20 pointer-events-auto backdrop-blur-2xl">
+          <span className="text-[10px] font-black uppercase tracking-[0.6em] opacity-40">Verification</span>
+          <div className="h-6 w-px bg-white/30"></div>
+          <span className="text-indigo-400 font-black text-2xl uppercase tracking-tighter">STAGE {currentStep} / {settings.totalSteps}</span>
         </div>
       </div>
 
-      <div className="max-w-[1000px] mx-auto border-x-4 border-slate-50 p-6 md:p-14 pb-60">
+      <div className="max-w-[1100px] mx-auto border-x-8 border-slate-50 p-8 md:p-20 pb-80">
         <article>
-          {/* Hero Content */}
-          <div className="h-[600px] w-full rounded-[3.5rem] overflow-hidden mb-14 shadow-2xl border-8 border-white group">
-            <img src={blogPost.imageUrl} className="w-full h-full object-cover group-hover:scale-105 transition duration-[2s]" alt="Hero" />
+          <div className="h-[700px] w-full rounded-[4rem] overflow-hidden mb-20 shadow-2xl border-[12px] border-white ring-1 ring-slate-100">
+            <img src={blogPost.imageUrl} className="w-full h-full object-cover grayscale hover:grayscale-0 transition duration-[2s]" alt="Article Header" />
           </div>
 
-          <h1 className="text-6xl md:text-8xl font-black mb-14 tracking-tighter leading-none text-slate-900 text-center md:text-left">
+          <h1 className="text-7xl md:text-9xl font-black mb-20 tracking-tighter leading-none text-slate-900 text-center md:text-left uppercase">
             {blogPost.title}
           </h1>
 
-          <div className="flex items-center justify-between space-x-6 mb-16 pb-12 border-b-2 border-slate-100">
-             <div className="flex items-center space-x-6">
-                <div className="w-16 h-16 bg-slate-900 rounded-2xl flex items-center justify-center font-black text-white text-2xl">
+          <div className="flex items-center justify-between mb-24 pb-16 border-b-4 border-slate-50">
+             <div className="flex items-center space-x-8">
+                <div className="w-20 h-20 bg-slate-900 rounded-[2rem] flex items-center justify-center font-black text-white text-3xl">
                     {blogPost.author[0]}
                 </div>
                 <div>
-                    <p className="text-xs font-black text-slate-400 uppercase tracking-widest">{blogPost.author}</p>
-                    <p className="text-lg font-bold text-slate-900">{blogPost.date} • Verified Author</p>
+                    <p className="text-xs font-black text-slate-400 uppercase tracking-[0.4em] mb-1">{blogPost.author}</p>
+                    <p className="text-2xl font-black text-slate-900 tracking-tight">{blogPost.date}</p>
                 </div>
              </div>
-             <div className="hidden md:block bg-indigo-50 px-6 py-2 rounded-xl text-indigo-600 font-black text-xs uppercase tracking-widest">
-                Professional Analysis
+             <div className="hidden lg:flex items-center space-x-4 bg-indigo-50 px-10 py-4 rounded-[2rem] text-indigo-600 font-black text-sm uppercase tracking-widest shadow-sm">
+                <ShieldCheck className="w-6 h-6" /> Verified Research Article
              </div>
           </div>
           
           <div className="max-w-none">
-             {/* Verification UI Container */}
-             <div className="bg-slate-900 rounded-[3.5rem] p-14 text-white shadow-2xl relative overflow-hidden my-20 border-4 border-indigo-500/20">
+             <div className="bg-slate-900 rounded-[4rem] p-20 text-white shadow-2xl relative overflow-hidden my-24 border-8 border-indigo-500/10">
                 <div className="relative z-10 text-center">
-                  <h3 className="text-4xl font-black mb-6 flex items-center justify-center tracking-tighter uppercase">
-                    <ShieldCheck className="mr-4 w-12 h-12 text-indigo-400" /> SECURE AUTHENTICATION
+                  <h3 className="text-5xl font-black mb-10 flex items-center justify-center tracking-tighter uppercase">
+                    AUTHENTICATION POINT
                   </h3>
-                  <p className="text-slate-400 text-lg mb-14 leading-relaxed max-w-xl mx-auto font-medium">To unlock the destination path, confirm your session below and scroll through our research content to reach the relay point.</p>
+                  <p className="text-slate-400 text-xl mb-16 leading-relaxed max-w-2xl mx-auto font-medium">To protect this relay path, verify your connection and scroll through the analysis below to reach the next gateway.</p>
                   
                   {!isTimerActive ? (
-                    <button onClick={handleStartVerify} className="w-full bg-white text-slate-900 py-8 rounded-3xl font-black text-3xl hover:scale-[1.02] transition transform shadow-[0_0_50px_rgba(255,255,255,0.2)]">VERIFY SESSION</button>
+                    <button onClick={handleStartVerify} className="w-full bg-white text-slate-900 py-10 rounded-[2.5rem] font-black text-4xl hover:bg-indigo-50 transition transform active:scale-95 shadow-[0_0_80px_rgba(255,255,255,0.15)]">CONFIRM SESSION</button>
                   ) : (
-                    <div className="bg-white/5 p-10 rounded-3xl border-2 border-white/10 flex flex-col items-center justify-center space-y-6">
-                      <div className="w-14 h-14 rounded-full border-4 border-indigo-500/30 border-t-indigo-500 animate-spin"></div>
-                      <span className="text-4xl font-black uppercase tracking-[0.2em] text-indigo-400">{timer}S</span>
-                      <p className="text-xs font-black uppercase tracking-[0.5em] text-slate-500 flex items-center">
-                        PLEASE WAIT & SCROLL DOWN <ArrowDown className="ml-3 w-5 h-5 animate-bounce" />
+                    <div className="bg-white/5 p-16 rounded-[3rem] border-4 border-white/10 flex flex-col items-center justify-center space-y-10">
+                      <div className="w-20 h-20 rounded-full border-8 border-indigo-500/20 border-t-indigo-500 animate-spin"></div>
+                      <span className="text-6xl font-black tracking-tighter text-indigo-400">{timer} SECONDS</span>
+                      <p className="text-sm font-black uppercase tracking-[0.8em] text-slate-500 flex items-center animate-pulse">
+                        SCROLL TO FOOTER <ArrowDown className="ml-5 w-8 h-8" />
                       </p>
                     </div>
                   )}
                 </div>
-                <div className="absolute top-0 right-0 w-[400px] h-[400px] gradient-bg blur-[150px] opacity-40 -mr-60 -mt-60"></div>
+                <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-indigo-600/20 blur-[200px] rounded-full -mr-80 -mt-80"></div>
              </div>
 
-             {/* Automated Middle Ad */}
-             <AdSlot html={settings.adSlots.middle} />
+             {/* Automated Middle Ad Slot */}
+             {!isAdmin && <AdSlot html={settings.adSlots.middle} />}
 
-             {/* The Massive 10,000+ Word Content Section */}
-             <div className="whitespace-pre-line text-2xl md:text-3xl leading-relaxed space-y-20 mb-32 text-slate-700 font-medium">
+             {/* The Massive 10,000+ Word Analysis Content */}
+             <div className="whitespace-pre-line text-3xl md:text-4xl leading-relaxed space-y-32 mb-40 text-slate-700 font-medium text-justify">
                 {blogPost.content}
              </div>
 
-             {/* Secondary Middle Ad for deep scrolling */}
-             <AdSlot html={settings.adSlots.middle} />
+             {/* Second Middle Ad Injection for high-scroll depth */}
+             {!isAdmin && <AdSlot html={settings.adSlots.middle} />}
              
-             {/* Interstitial Stage Ad Slot */}
-             <div className="my-24">
-               <AdSlot html={settings.stepAds[currentStep - 1] || ''} />
-             </div>
+             {/* Interstitial Step-specific Ad */}
+             {!isAdmin && (
+               <div className="my-32">
+                 <AdSlot html={settings.stepAds[currentStep - 1] || ''} />
+               </div>
+             )}
 
-             {/* Final long-tail content block */}
-             <div className="whitespace-pre-line text-2xl md:text-3xl leading-relaxed space-y-20 mb-32 text-slate-700 font-medium opacity-80">
-                {blogPost.content}
+             <div className="whitespace-pre-line text-3xl md:text-4xl leading-relaxed space-y-32 mb-40 text-slate-700 font-medium opacity-60 italic">
+                {blogPost.content.substring(0, 5000)}
              </div>
           </div>
         </article>
 
-        {/* The Final Button Area - Placed at absolute bottom after 10k words */}
-        <div className="flex flex-col items-center pt-32 border-t-4 border-slate-50 text-center" ref={bottomAnchorRef}>
-           <div className="mb-20 w-full">
+        {/* Final Relay Button Area at absolute bottom */}
+        <div className="flex flex-col items-center pt-40 border-t-8 border-slate-50 text-center" ref={bottomAnchorRef}>
+           {!isAdmin && <div className="mb-24 w-full">
               <AdSlot html={settings.adSlots.middle} />
-           </div>
+           </div>}
 
-           <p className="text-sm font-black text-slate-300 uppercase tracking-[0.8em] mb-14 animate-pulse">
-             CONTENT END REACHED
+           <p className="text-lg font-black text-slate-200 uppercase tracking-[1em] mb-20 animate-pulse">
+             ANALYSIS COMPLETE
            </p>
 
            <button 
              onClick={handleNextStep}
              disabled={!isTimerActive || timer > 0}
-             className={`px-32 py-10 rounded-[3rem] text-4xl font-black uppercase tracking-[0.2em] transition-all shadow-2xl transform border-4 ${
+             className={`px-40 py-12 rounded-[3.5rem] text-5xl font-black uppercase tracking-tighter transition-all shadow-2xl transform border-8 ${
                isTimerActive && timer <= 0 
-               ? 'bg-indigo-600 text-white hover:scale-105 active:scale-95 shadow-indigo-200 border-indigo-400' 
+               ? 'bg-indigo-600 text-white hover:scale-105 active:scale-95 shadow-indigo-200 border-indigo-400 cursor-pointer' 
                : 'bg-slate-50 text-slate-200 cursor-not-allowed border-slate-100'
              }`}
            >
-             {timer > 0 ? (isTimerActive ? `REMAINING ${timer}S` : 'VERIFY AT TOP') : 'RELAY TO NEXT'}
+             {timer > 0 ? (isTimerActive ? `${timer}S LEFT` : 'VERIFY ABOVE') : 'CONTINUE RELAY'}
            </button>
            
-           <p className="mt-12 text-xs font-black text-slate-400 uppercase tracking-widest bg-slate-50 px-8 py-3 rounded-full">
-             Current Session Progress: {currentStep} / {settings.totalSteps} Stages Complete
+           <p className="mt-16 text-sm font-black text-slate-400 uppercase tracking-[0.5em] bg-slate-50 px-12 py-5 rounded-full border-2 border-slate-100 shadow-sm">
+             Vault Progression: {currentStep} OF {settings.totalSteps} 
            </p>
         </div>
       </div>
 
-      {/* Automated Bottom Ad */}
-      <AdSlot html={settings.adSlots.bottom} />
+      {/* Automated Bottom Ad - Visible only to regular users */}
+      {!isAdmin && <AdSlot html={settings.adSlots.bottom} />}
     </div>
   );
 };
