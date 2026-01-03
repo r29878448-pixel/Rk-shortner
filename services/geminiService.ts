@@ -1,16 +1,8 @@
 
 import { GoogleGenAI, Type } from "@google/genai";
 
-// Safe initialization for browser environments
-const getApiKey = () => {
-  try {
-    return (window as any).process?.env?.API_KEY || '';
-  } catch {
-    return '';
-  }
-};
-
-const ai = new GoogleGenAI({ apiKey: getApiKey() });
+// Always initialize GoogleGenAI with the API key from process.env.API_KEY as per guidelines
+const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
 
 export const geminiService = {
   async generateBlogPosts() {
@@ -36,6 +28,7 @@ export const geminiService = {
           }
         }
       });
+      // Use the .text property directly to access the generated content
       return JSON.parse(response.text || '[]');
     } catch (error) {
       console.error("Gemini Error:", error);
@@ -49,6 +42,7 @@ export const geminiService = {
         model: 'gemini-3-flash-preview',
         contents: `Suggest 3 short, catchy URL alias words for: ${originalUrl}. Output only the words separated by commas.`,
       });
+      // Use the .text property directly to access the generated content
       return response.text?.split(',').map(s => s.trim()) || [];
     } catch (error) {
       return ['link', 'go', 'visit'];

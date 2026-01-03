@@ -43,15 +43,10 @@ export interface ClickEvent {
 export interface SiteSettings {
   siteName: string;
   adsEnabled: boolean;
-  captchaEnabled: boolean;
-  captchaSiteKey: string;
-  captchaSecretKey: string;
   adSlots: {
-    globalHeader: string;
-    globalFooter: string;
-    globalSidebar: string;
-    contentTop: string;
-    contentBottom: string;
+    top: string;
+    middle: string;
+    bottom: string;
   };
   stepAds: string[]; 
   redirectDelay: number; 
