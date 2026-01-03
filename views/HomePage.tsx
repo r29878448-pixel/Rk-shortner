@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Copy, Check, Loader2, Zap, Link as LinkIcon } from 'lucide-react';
 import { Link as LinkType, SiteSettings, User, SubscriptionPlan } from '../types.ts';
@@ -11,14 +11,20 @@ interface HomePageProps {
   currentUser: User | null;
 }
 
-const HomePage: React.FC<HomePageProps> = ({ siteName, settings, currentUser }) => {
+const HomePage: React.FC<HomePageProps> = ({ siteName, settings, currentUser: initialUser }) => {
   const navigate = useNavigate();
   const [url, setUrl] = useState('');
   const [shortenedLink, setShortenedLink] = useState<LinkType | null>(null);
   const [isCopied, setIsCopied] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [user, setUser] = useState<User | null>(initialUser);
 
-  // Use latest settings
+  // Sync internal user state if prop changes
+  useEffect(() => {
+    setUser(initialUser);
+  }, [initialUser]);
+
+  // Load latest settings
   const activeSettings: SiteSettings = JSON.parse(localStorage.getItem('swiftlink_settings') || JSON.stringify(DEFAULT_SETTINGS));
 
   const generateShortCode = () => {
@@ -34,19 +40,20 @@ const HomePage: React.FC<HomePageProps> = ({ siteName, settings, currentUser }) 
     e.preventDefault();
     if (!url) return;
     
-    // Auth Check
-    if (!currentUser) {
+    // Auth Check Fallback
+    const sessionUser = user || JSON.parse(localStorage.getItem('swiftlink_user') || 'null');
+    if (!sessionUser) {
       navigate('/login');
       return;
     }
 
     // Plan Limit Check
     const existing = JSON.parse(localStorage.getItem('swiftlink_global_links') || '[]');
-    const userLinksCount = existing.filter((l: any) => l.userId === currentUser.id).length;
+    const userLinksCount = existing.filter((l: any) => l.userId === sessionUser.id).length;
     
     let limit = activeSettings.planConfig.freeLimit;
-    if (currentUser.plan === SubscriptionPlan.PRO) limit = activeSettings.planConfig.proLimit;
-    if (currentUser.plan === SubscriptionPlan.BUSINESS) limit = activeSettings.planConfig.businessLimit;
+    if (sessionUser.plan === SubscriptionPlan.PRO) limit = activeSettings.planConfig.proLimit;
+    if (sessionUser.plan === SubscriptionPlan.BUSINESS) limit = activeSettings.planConfig.businessLimit;
 
     if (userLinksCount >= limit) {
       alert(`Plan limit reached (${limit} links). Please upgrade your account.`);
@@ -56,30 +63,33 @@ const HomePage: React.FC<HomePageProps> = ({ siteName, settings, currentUser }) 
 
     setIsLoading(true);
     
+    // Simulate generation delay
     setTimeout(() => {
       const shortCode = generateShortCode();
       const newLink: LinkType = {
         id: Math.random().toString(36).substring(7),
-        userId: currentUser.id,
+        userId: sessionUser.id,
         originalUrl: url,
         shortCode,
         clicks: 0,
         createdAt: new Date()
       };
       
-      localStorage.setItem('swiftlink_global_links', JSON.stringify([newLink, ...existing]));
+      const updatedGlobalLinks = [newLink, ...existing];
+      localStorage.setItem('swiftlink_global_links', JSON.stringify(updatedGlobalLinks));
       setShortenedLink(newLink);
       setIsLoading(false);
-    }, 600);
+      setUrl(''); // Clear input for next
+    }, 800);
   };
 
   const copyToClipboard = () => {
     if (!shortenedLink) return;
-    const baseUrl = window.location.origin + window.location.pathname;
-    const cleanBaseUrl = baseUrl.endsWith('/') ? baseUrl : baseUrl.replace(/\/[^\/]*$/, '/');
-    const fullUrl = `${cleanBaseUrl}#/s/${shortenedLink.shortCode}`;
+    // Format: origin + pathname + #/s/code
+    const baseUrl = window.location.origin + window.location.pathname.split('#')[0];
+    const finalUrl = `${baseUrl.endsWith('/') ? baseUrl : baseUrl + '/'}#/s/${shortenedLink.shortCode}`;
     
-    navigator.clipboard.writeText(fullUrl);
+    navigator.clipboard.writeText(finalUrl);
     setIsCopied(true);
     setTimeout(() => setIsCopied(false), 2000);
   };
@@ -111,20 +121,24 @@ const HomePage: React.FC<HomePageProps> = ({ siteName, settings, currentUser }) 
               required
             />
           </div>
-          <button className="bg-indigo-600 text-white px-12 py-6 rounded font-black uppercase text-sm tracking-widest shadow-xl shadow-indigo-200 hover:bg-indigo-700 transition-all flex items-center justify-center min-w-[200px] active:scale-95">
+          <button 
+            type="submit"
+            disabled={isLoading}
+            className="bg-indigo-600 text-white px-12 py-6 rounded font-black uppercase text-sm tracking-widest shadow-xl shadow-indigo-200 hover:bg-indigo-700 transition-all flex items-center justify-center min-w-[200px] active:scale-95 disabled:opacity-50"
+          >
             {isLoading ? <Loader2 className="animate-spin w-6 h-6" /> : 'Start Relay'}
           </button>
         </form>
 
         {shortenedLink && (
-          <div className="bg-slate-900 p-10 rounded text-white flex flex-col md:flex-row items-center justify-between gap-6 max-w-2xl mx-auto animate-in border-4 border-slate-800 shadow-2xl">
+          <div className="bg-slate-900 p-8 md:p-10 rounded-[2rem] text-white flex flex-col md:flex-row items-center justify-between gap-6 max-w-2xl mx-auto animate-in border-4 border-slate-800 shadow-2xl">
             <div className="text-left overflow-hidden w-full">
               <p className="text-[10px] font-black uppercase tracking-[0.4em] text-indigo-400 mb-3">Live Node Ready</p>
-              <span className="text-lg md:text-xl font-mono truncate block text-indigo-50 bg-slate-800/50 px-4 py-2 rounded">
-                {window.location.origin + window.location.pathname.replace(/\/[^\/]*$/, '/')}#/s/${shortenedLink.shortCode}
+              <span className="text-lg md:text-xl font-mono truncate block text-indigo-100 bg-white/5 px-4 py-3 rounded-xl border border-white/5">
+                {window.location.origin + window.location.pathname.split('#')[0]}#/s/{shortenedLink.shortCode}
               </span>
             </div>
-            <button onClick={copyToClipboard} className="w-full md:w-auto bg-white text-slate-900 px-8 py-5 rounded font-black text-xs uppercase tracking-widest flex items-center justify-center space-x-3 shrink-0 hover:bg-indigo-50 transition shadow-lg">
+            <button onClick={copyToClipboard} className="w-full md:w-auto bg-white text-slate-900 px-8 py-5 rounded-2xl font-black text-xs uppercase tracking-widest flex items-center justify-center space-x-3 shrink-0 hover:bg-indigo-50 transition shadow-lg active:scale-95">
               {isCopied ? <Check className="w-5 h-5 text-green-500" /> : <Copy className="w-5 h-5" />}
               <span>{isCopied ? 'Copied' : 'Copy'}</span>
             </button>

@@ -45,13 +45,10 @@ const ApiHandler = () => {
     const storedUserString = localStorage.getItem('swiftlink_user');
     const currentUser = storedUserString ? JSON.parse(storedUserString) : null;
 
-    // Handle the direct visit to /api route (no query params)
     if (!api && !url) {
       if (currentUser) {
-        // If logged in, redirect to dashboard where the API section is located
         navigate('/dashboard');
       } else {
-        // If not logged in, redirect to login page
         navigate('/login');
       }
       return;
@@ -60,13 +57,11 @@ const ApiHandler = () => {
     if (api && url) {
       const settings: SiteSettings = JSON.parse(localStorage.getItem('swiftlink_settings') || JSON.stringify(DEFAULT_SETTINGS));
 
-      // Verify API Key matches current user
       if (!currentUser || currentUser.apiKey !== api) {
         setError('AUTH_ERROR: Invalid API Token or unauthorized session.');
         return;
       }
 
-      // Check Plan Quota
       const existing = JSON.parse(localStorage.getItem('swiftlink_global_links') || '[]');
       const userCount = existing.filter((l: any) => l.userId === currentUser.id).length;
       
@@ -95,7 +90,7 @@ const ApiHandler = () => {
       const finalResult = `${baseUrl}#/s/${shortCode}`;
       setResult(finalResult);
     } else {
-      setError('PARAM_ERROR: both "api" and "url" query parameters are required for programmatic shortening.');
+      setError('PARAM_ERROR: both "api" and "url" query parameters are required.');
     }
   }, [location, navigate]);
 
@@ -181,7 +176,6 @@ const GlobalLayout: React.FC<GlobalLayoutProps> = ({ children, settings, current
               </RouterLink>
             </div>
             
-            {/* Desktop Menu */}
             <div className="hidden md:flex items-center space-x-8">
               <RouterLink to="/" className="text-[11px] font-black text-slate-600 hover:text-indigo-600 uppercase tracking-[0.2em] transition">Create</RouterLink>
               <RouterLink to="/blog" className="text-[11px] font-black text-slate-600 hover:text-indigo-600 uppercase tracking-[0.2em] transition">Insights</RouterLink>
@@ -201,12 +195,10 @@ const GlobalLayout: React.FC<GlobalLayoutProps> = ({ children, settings, current
               )}
             </div>
 
-            {/* Mobile Menu Toggle Button */}
             <div className="md:hidden flex items-center">
               <button 
                 onClick={() => setIsMenuOpen(!isMenuOpen)} 
                 className="text-slate-900 p-2 bg-slate-50 rounded-xl hover:bg-slate-100 transition"
-                aria-label="Toggle menu"
               >
                 {isMenuOpen ? <X className="w-7 h-7" /> : <Menu className="w-7 h-7" />}
               </button>
@@ -214,9 +206,8 @@ const GlobalLayout: React.FC<GlobalLayoutProps> = ({ children, settings, current
           </div>
         </div>
 
-        {/* Mobile Menu Content Drawer */}
         {isMenuOpen && (
-          <div className="md:hidden fixed inset-x-0 top-20 bottom-0 z-[999] bg-white border-t border-slate-100 overflow-y-auto animate-in">
+          <div className="md:hidden fixed inset-x-0 top-20 bottom-0 z-[999] bg-white border-t border-slate-100 overflow-y-auto">
             <div className="p-6 space-y-4">
               <RouterLink to="/" className="block p-4 bg-slate-50 rounded-2xl text-[12px] font-black uppercase tracking-widest text-slate-900">Create Relay</RouterLink>
               <RouterLink to="/blog" className="block p-4 bg-slate-50 rounded-2xl text-[12px] font-black uppercase tracking-widest text-slate-900">Latest Insights</RouterLink>
@@ -226,7 +217,7 @@ const GlobalLayout: React.FC<GlobalLayoutProps> = ({ children, settings, current
                 {currentUser ? (
                   <>
                     {currentUser.role === 'ADMIN' ? (
-                      <RouterLink to="/admin" className="block p-5 bg-indigo-600 text-white text-center rounded-2xl text-[12px] font-black uppercase tracking-widest shadow-xl shadow-indigo-100">
+                      <RouterLink to="/admin" className="block p-5 bg-indigo-600 text-white text-center rounded-2xl text-[12px] font-black uppercase tracking-widest">
                         Admin Panel: Network Node
                       </RouterLink>
                     ) : (
@@ -234,12 +225,7 @@ const GlobalLayout: React.FC<GlobalLayoutProps> = ({ children, settings, current
                         <Wallet className="w-4 h-4 mr-2" /> My Dashboard
                       </RouterLink>
                     )}
-                    <button 
-                      onClick={handleLogout}
-                      className="w-full p-4 text-center text-[11px] font-black text-red-500 uppercase tracking-[0.2em]"
-                    >
-                      Security Sign Out
-                    </button>
+                    <button onClick={handleLogout} className="w-full p-4 text-center text-[11px] font-black text-red-500 uppercase tracking-[0.2em]">Sign Out</button>
                   </>
                 ) : (
                   <RouterLink to="/login" className="block p-5 bg-slate-900 text-white text-center rounded-2xl text-[12px] font-black uppercase tracking-widest">
@@ -256,14 +242,14 @@ const GlobalLayout: React.FC<GlobalLayoutProps> = ({ children, settings, current
       
       <footer className="bg-slate-900 py-20 px-4 text-center">
          <div className="flex items-center justify-center space-x-3 mb-6">
-            <div className="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center shadow-2xl shadow-indigo-500/20">
+            <div className="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center">
               <LinkIcon className="text-white w-4 h-4" />
             </div>
             <span className="text-2xl font-black text-white uppercase tracking-tighter">{settings.siteName}</span>
          </div>
          <p className="text-slate-500 text-[10px] font-black uppercase tracking-[0.5em] mb-10">Multi-User Monetization Infrastructure</p>
          <div className="pt-10 border-t border-white/5 max-w-xl mx-auto">
-            <p className="text-slate-600 text-[10px] font-bold uppercase tracking-widest">© 2026 SwiftLink Cloud. Strictly No Ads on Dashboard nodes.</p>
+            <p className="text-slate-600 text-[10px] font-bold uppercase tracking-widest">© 2026 SwiftLink Cloud.</p>
          </div>
       </footer>
     </div>
@@ -275,10 +261,17 @@ const App: React.FC = () => {
   const [settings, setSettings] = useState<SiteSettings>(DEFAULT_SETTINGS);
 
   useEffect(() => {
+    // Initial Setup
+    const storedSettings = localStorage.getItem('swiftlink_settings');
+    if (!storedSettings) {
+      localStorage.setItem('swiftlink_settings', JSON.stringify(DEFAULT_SETTINGS));
+      setSettings(DEFAULT_SETTINGS);
+    } else {
+      setSettings(JSON.parse(storedSettings));
+    }
+
     const storedUser = localStorage.getItem('swiftlink_user');
     if (storedUser) setCurrentUser(JSON.parse(storedUser));
-    const storedSettings = localStorage.getItem('swiftlink_settings');
-    if (storedSettings) setSettings(JSON.parse(storedSettings));
   }, []);
 
   const handleLogout = () => {
