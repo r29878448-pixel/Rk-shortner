@@ -35,22 +35,22 @@ const GlobalLayout: React.FC<GlobalLayoutProps> = ({ children, settings, current
       {/* Navigation - Professional Classic Style */}
       <nav className="bg-white border-b border-slate-200 sticky top-0 z-[1000] shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between h-16">
+          <div className="flex justify-between h-16 md:h-20">
             <div className="flex items-center">
               <RouterLink to="/" className="flex items-center space-x-2">
-                <div className="w-8 h-8 bg-indigo-600 rounded flex items-center justify-center">
-                  <LinkIcon className="text-white w-5 h-5" />
+                <div className="w-8 h-8 md:w-10 md:h-10 bg-indigo-600 rounded flex items-center justify-center shadow-indigo-200 shadow-lg">
+                  <LinkIcon className="text-white w-5 h-5 md:w-6 md:h-6" />
                 </div>
-                <span className="text-xl font-bold text-slate-900 tracking-tight uppercase">{settings.siteName}</span>
+                <span className="text-lg md:text-2xl font-black text-slate-900 tracking-tighter uppercase">{settings.siteName}</span>
               </RouterLink>
               
               {/* Desktop Nav */}
               <div className="hidden md:ml-10 md:flex md:space-x-8">
-                <RouterLink to="/" className="text-sm font-semibold text-slate-600 hover:text-indigo-600 flex items-center">
-                  <LayoutDashboard className="w-4 h-4 mr-1.5" /> Dashboard
+                <RouterLink to="/" className="text-sm font-bold text-slate-600 hover:text-indigo-600 flex items-center transition">
+                  Dashboard
                 </RouterLink>
-                <RouterLink to="/blog" className="text-sm font-semibold text-slate-600 hover:text-indigo-600 flex items-center">
-                  <FileText className="w-4 h-4 mr-1.5" /> Insights
+                <RouterLink to="/blog" className="text-sm font-bold text-slate-600 hover:text-indigo-600 flex items-center transition">
+                  Insights
                 </RouterLink>
               </div>
             </div>
@@ -58,29 +58,29 @@ const GlobalLayout: React.FC<GlobalLayoutProps> = ({ children, settings, current
             <div className="hidden md:flex items-center space-x-6">
               {currentUser ? (
                 <div className="flex items-center space-x-6 border-l pl-6 border-slate-200">
-                  <RouterLink to="/admin" className="text-sm font-bold text-indigo-600 flex items-center">
-                    <Shield className="w-4 h-4 mr-1.5" /> Admin Terminal
+                  <RouterLink to="/admin" className="text-sm font-bold text-indigo-600 flex items-center bg-indigo-50 px-4 py-2 rounded border border-indigo-100">
+                    <Shield className="w-4 h-4 mr-2" /> Admin Terminal
                   </RouterLink>
                   <button 
                     onClick={handleLogout} 
-                    className="text-sm font-bold text-red-500 hover:text-red-700"
+                    className="text-sm font-bold text-red-500 hover:text-red-700 transition"
                   >
                     Logout
                   </button>
                 </div>
               ) : (
-                <RouterLink to="/login" className="text-sm font-bold text-slate-700 hover:text-indigo-600 border px-4 py-2 rounded border-slate-300 hover:border-indigo-600 transition">
+                <RouterLink to="/login" className="text-sm font-bold text-slate-700 hover:text-indigo-600 border px-6 py-2.5 rounded-lg border-slate-300 hover:border-indigo-600 transition shadow-sm">
                   Login
                 </RouterLink>
               )}
             </div>
 
-            {/* Mobile Menu Button - Standard 3-Line Menu */}
+            {/* Mobile Menu Button - High Contrast */}
             <div className="md:hidden flex items-center">
               <button 
                 onClick={() => setIsMenuOpen(!isMenuOpen)}
-                className="text-slate-600 p-2 hover:bg-slate-100 rounded transition border border-slate-200"
-                aria-label="Toggle Menu"
+                className="text-slate-900 p-2 bg-slate-50 border border-slate-200 rounded-lg transition-colors focus:ring-2 focus:ring-indigo-500"
+                aria-label="Toggle Navigation Menu"
               >
                 {isMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
               </button>
@@ -90,18 +90,28 @@ const GlobalLayout: React.FC<GlobalLayoutProps> = ({ children, settings, current
 
         {/* Mobile Navigation Drawer */}
         {isMenuOpen && (
-          <div className="md:hidden bg-white border-t border-slate-200 animate-in">
-            <div className="px-4 pt-4 pb-6 space-y-2">
-              <RouterLink to="/" className="block px-3 py-3 text-base font-bold text-slate-700 hover:bg-slate-50 rounded" onClick={() => setIsMenuOpen(false)}>Dashboard</RouterLink>
-              <RouterLink to="/blog" className="block px-3 py-3 text-base font-bold text-slate-700 hover:bg-slate-50 rounded" onClick={() => setIsMenuOpen(false)}>Insights</RouterLink>
-              <div className="my-4 border-t border-slate-100"></div>
+          <div className="md:hidden bg-white border-t border-slate-200 shadow-2xl animate-in overflow-y-auto max-h-[calc(100vh-4rem)]">
+            <div className="px-6 py-8 space-y-4">
+              <RouterLink to="/" className="flex items-center px-4 py-4 text-lg font-black uppercase tracking-widest text-slate-700 hover:bg-slate-50 rounded-xl" onClick={() => setIsMenuOpen(false)}>
+                <LayoutDashboard className="w-5 h-5 mr-4 text-indigo-600" /> Dashboard
+              </RouterLink>
+              <RouterLink to="/blog" className="flex items-center px-4 py-4 text-lg font-black uppercase tracking-widest text-slate-700 hover:bg-slate-50 rounded-xl" onClick={() => setIsMenuOpen(false)}>
+                <FileText className="w-5 h-5 mr-4 text-indigo-600" /> Insights
+              </RouterLink>
+              <div className="my-6 border-t border-slate-100"></div>
               {currentUser ? (
-                <>
-                  <RouterLink to="/admin" className="block px-3 py-3 text-base font-bold text-indigo-600" onClick={() => setIsMenuOpen(false)}>Admin Panel</RouterLink>
-                  <button onClick={() => { handleLogout(); setIsMenuOpen(false); }} className="block w-full text-left px-3 py-3 text-base font-bold text-red-500">Logout</button>
-                </>
+                <div className="space-y-4">
+                  <RouterLink to="/admin" className="flex items-center px-4 py-4 text-lg font-black uppercase tracking-widest text-indigo-600 bg-indigo-50 rounded-xl" onClick={() => setIsMenuOpen(false)}>
+                    <Shield className="w-5 h-5 mr-4" /> Admin Terminal
+                  </RouterLink>
+                  <button onClick={() => { handleLogout(); setIsMenuOpen(false); }} className="flex items-center w-full text-left px-4 py-4 text-lg font-black uppercase tracking-widest text-red-500 hover:bg-red-50 rounded-xl transition">
+                    Logout Session
+                  </button>
+                </div>
               ) : (
-                <RouterLink to="/login" className="block px-3 py-3 text-base font-bold text-indigo-600" onClick={() => setIsMenuOpen(false)}>Secure Login</RouterLink>
+                <RouterLink to="/login" className="flex items-center px-4 py-4 text-lg font-black uppercase tracking-widest text-indigo-600 border-2 border-indigo-600 rounded-xl text-center justify-center" onClick={() => setIsMenuOpen(false)}>
+                  Secure Login
+                </RouterLink>
               )}
             </div>
           </div>
@@ -112,10 +122,10 @@ const GlobalLayout: React.FC<GlobalLayoutProps> = ({ children, settings, current
         {children}
       </main>
       
-      <footer className="bg-white py-12 px-4 border-t border-slate-200">
+      <footer className="bg-slate-900 py-16 px-4">
         <div className="max-w-7xl mx-auto text-center">
-           <span className="text-xl font-black text-slate-900 tracking-tighter uppercase">{settings.siteName}</span>
-           <p className="text-slate-400 text-xs font-bold uppercase tracking-[0.3em] mt-3">Professional URL Infrastructure</p>
+           <span className="text-2xl font-black text-white tracking-tighter uppercase">{settings.siteName}</span>
+           <p className="text-slate-500 text-[10px] font-black uppercase tracking-[0.4em] mt-4">Automated Link Monetization Network</p>
         </div>
       </footer>
     </div>
