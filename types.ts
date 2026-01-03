@@ -31,6 +31,15 @@ export interface Link {
   createdAt: Date;
 }
 
+export interface ClickEvent {
+  id: string;
+  linkId: string;
+  shortCode: string;
+  timestamp: string;
+  referrer: string;
+  userAgent: string;
+}
+
 export interface SiteSettings {
   siteName: string;
   adsEnabled: boolean;

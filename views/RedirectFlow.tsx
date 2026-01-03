@@ -11,7 +11,7 @@ import {
   Menu,
   ChevronDown
 } from 'lucide-react';
-import { SiteSettings, BlogPost } from '../types.ts';
+import { SiteSettings, BlogPost, ClickEvent, Link } from '../types.ts';
 import AdSlot from '../components/AdSlot.tsx';
 
 const DEMO_POSTS: BlogPost[] = [
@@ -38,6 +38,7 @@ const RedirectFlow: React.FC<RedirectFlowProps> = ({ settings }) => {
   const [isTimerActive, setIsTimerActive] = useState(false);
   const [loading, setLoading] = useState(true);
   const [targetUrl, setTargetUrl] = useState('');
+  const [linkId, setLinkId] = useState('');
   const [error, setError] = useState('');
   const [blogPost, setBlogPost] = useState<BlogPost>(DEMO_POSTS[0]);
   
@@ -49,6 +50,7 @@ const RedirectFlow: React.FC<RedirectFlowProps> = ({ settings }) => {
 
     if (link) {
       setTargetUrl(link.originalUrl);
+      setLinkId(link.id);
       setBlogPost(DEMO_POSTS[Math.floor(Math.random() * DEMO_POSTS.length)]);
       setTimeout(() => {
         setLoading(false);
@@ -70,6 +72,27 @@ const RedirectFlow: React.FC<RedirectFlowProps> = ({ settings }) => {
     setTimeout(() => {
        bottomAnchorRef.current?.scrollIntoView({ behavior: 'smooth' });
     }, 100);
+  };
+
+  const handleLogClick = () => {
+    // 1. Log the click event
+    const clickEvent: ClickEvent = {
+      id: Math.random().toString(36).substring(7),
+      linkId: linkId,
+      shortCode: shortCode || 'unknown',
+      timestamp: new Date().toISOString(),
+      referrer: document.referrer || 'Direct',
+      userAgent: navigator.userAgent
+    };
+    const events = JSON.parse(localStorage.getItem('swiftlink_click_events') || '[]');
+    localStorage.setItem('swiftlink_click_events', JSON.stringify([clickEvent, ...events]));
+
+    // 2. Increment click count in link object
+    const storedLinks = JSON.parse(localStorage.getItem('swiftlink_global_links') || '[]');
+    const updatedLinks = storedLinks.map((l: Link) => 
+      l.id === linkId ? { ...l, clicks: (l.clicks || 0) + 1 } : l
+    );
+    localStorage.setItem('swiftlink_global_links', JSON.stringify(updatedLinks));
   };
 
   const handleNextStep = () => {
@@ -139,6 +162,7 @@ const RedirectFlow: React.FC<RedirectFlowProps> = ({ settings }) => {
             ) : (
               <a 
                 href={targetUrl} 
+                onClick={handleLogClick}
                 className="block w-full py-6 gradient-bg text-white rounded-2xl font-black text-2xl shadow-[0_20px_50px_-10px_rgba(79,70,229,0.5)] hover:scale-[1.02] transition transform active:scale-95"
               >
                 GET FINAL LINK
