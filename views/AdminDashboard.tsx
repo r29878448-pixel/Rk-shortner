@@ -25,7 +25,12 @@ import {
   Users as UsersIcon,
   MessageCircle,
   TrendingUp,
-  Wallet
+  Wallet,
+  Layout,
+  Layers,
+  Clock,
+  ToggleLeft,
+  ToggleRight
 } from 'lucide-react';
 import { User, SiteSettings, UserRole, Link as LinkType, ClickEvent, SubscriptionPlan } from '../types.ts';
 
@@ -43,7 +48,9 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user, settings, onUpdat
     const base = saved ? JSON.parse(saved) : settings;
     return {
       ...base,
-      cpmRate: base.cpmRate || settings.cpmRate
+      cpmRate: base.cpmRate || settings.cpmRate,
+      adSlots: base.adSlots || settings.adSlots,
+      stepAds: base.stepAds || settings.stepAds
     };
   });
 
@@ -81,6 +88,31 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user, settings, onUpdat
     alert(`User plan updated to ${newPlan}`);
   };
 
+  const updateAdSlot = (slot: keyof typeof localSettings.adSlots, value: string) => {
+    setLocalSettings({
+      ...localSettings,
+      adSlots: { ...localSettings.adSlots, [slot]: value }
+    });
+  };
+
+  const updateContentAd = (index: number, value: string) => {
+    const newContentAds = [...localSettings.adSlots.contentAds];
+    newContentAds[index] = value;
+    setLocalSettings({
+      ...localSettings,
+      adSlots: { ...localSettings.adSlots, contentAds: newContentAds }
+    });
+  };
+
+  const updateStepAd = (index: number, value: string) => {
+    const newStepAds = [...localSettings.stepAds];
+    newStepAds[index] = value;
+    setLocalSettings({
+      ...localSettings,
+      stepAds: newStepAds
+    });
+  };
+
   if (!user || user.role !== UserRole.ADMIN) return null;
 
   return (
@@ -96,9 +128,9 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user, settings, onUpdat
         <div className="flex bg-white border border-slate-200 p-1.5 rounded-2xl shadow-xl overflow-x-auto no-scrollbar">
           {[
             { id: 'analytics', label: 'Stats', icon: <BarChart3 className="w-4 h-4 mr-2" /> },
-            { id: 'users', label: 'Analytics', icon: <UsersIcon className="w-4 h-4 mr-2" /> },
-            { id: 'plans', label: 'Global CPM', icon: <Settings className="w-4 h-4 mr-2" /> },
-            { id: 'ads', label: 'Ad Codes', icon: <Globe className="w-4 h-4 mr-2" /> },
+            { id: 'users', label: 'Publishers', icon: <UsersIcon className="w-4 h-4 mr-2" /> },
+            { id: 'plans', label: 'Monetization', icon: <TrendingUp className="w-4 h-4 mr-2" /> },
+            { id: 'ads', label: 'Ad Engine', icon: <Globe className="w-4 h-4 mr-2" /> },
             { id: 'api', label: 'System', icon: <Terminal className="w-4 h-4 mr-2" /> }
           ].map((tab) => (
             <button key={tab.id} onClick={() => setActiveTab(tab.id as any)} className={`flex items-center px-6 py-4 rounded-xl font-black text-[10px] uppercase tracking-widest transition-all whitespace-nowrap ${activeTab === tab.id ? 'bg-indigo-600 text-white shadow-lg' : 'text-slate-500 hover:bg-slate-50'}`}>
@@ -114,6 +146,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user, settings, onUpdat
         </div>
       )}
 
+      {/* OVERVIEW TAB */}
       {activeTab === 'analytics' && (
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 animate-in">
           <div className="bg-white border border-slate-200 p-10 rounded-[2rem] shadow-sm">
@@ -135,6 +168,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user, settings, onUpdat
         </div>
       )}
 
+      {/* MONETIZATION TAB */}
       {activeTab === 'plans' && (
         <div className="bg-white rounded-[3rem] p-10 md:p-16 border border-slate-200 shadow-sm animate-in">
           <h2 className="text-3xl font-black mb-12 uppercase tracking-tighter text-slate-900 flex items-center">
@@ -157,6 +191,145 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user, settings, onUpdat
         </div>
       )}
 
+      {/* AD ENGINE TAB */}
+      {activeTab === 'ads' && (
+        <div className="space-y-8 animate-in">
+          <div className="bg-white rounded-[3rem] p-10 md:p-12 border border-slate-200 shadow-sm">
+            <div className="flex justify-between items-center mb-10">
+              <h2 className="text-2xl font-black uppercase tracking-tighter text-slate-900 flex items-center">
+                 <Globe className="w-7 h-7 mr-4 text-indigo-600" /> Ad Slot Injection
+              </h2>
+              <button 
+                onClick={() => setLocalSettings({...localSettings, adsEnabled: !localSettings.adsEnabled})}
+                className={`flex items-center px-6 py-3 rounded-xl font-black text-[10px] uppercase tracking-widest transition-all ${localSettings.adsEnabled ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-600'}`}
+              >
+                {localSettings.adsEnabled ? <ToggleRight className="w-5 h-5 mr-2" /> : <ToggleLeft className="w-5 h-5 mr-2" />}
+                Ads {localSettings.adsEnabled ? 'Active' : 'Paused'}
+              </button>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-10">
+              <div className="space-y-4">
+                <label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Top Header Ad (HTML)</label>
+                <textarea 
+                  className="w-full h-40 p-4 bg-slate-900 text-indigo-300 font-mono text-xs rounded-2xl border-none focus:ring-2 focus:ring-indigo-500"
+                  value={localSettings.adSlots.top}
+                  onChange={(e) => updateAdSlot('top', e.target.value)}
+                />
+              </div>
+              <div className="space-y-4">
+                <label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Middle Content Ad (HTML)</label>
+                <textarea 
+                  className="w-full h-40 p-4 bg-slate-900 text-indigo-300 font-mono text-xs rounded-2xl border-none focus:ring-2 focus:ring-indigo-500"
+                  value={localSettings.adSlots.middle}
+                  onChange={(e) => updateAdSlot('middle', e.target.value)}
+                />
+              </div>
+              <div className="space-y-4">
+                <label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Bottom Footer Ad (HTML)</label>
+                <textarea 
+                  className="w-full h-40 p-4 bg-slate-900 text-indigo-300 font-mono text-xs rounded-2xl border-none focus:ring-2 focus:ring-indigo-500"
+                  value={localSettings.adSlots.bottom}
+                  onChange={(e) => updateAdSlot('bottom', e.target.value)}
+                />
+              </div>
+            </div>
+
+            <h3 className="text-sm font-black uppercase tracking-[0.3em] text-slate-400 mb-6 flex items-center">
+              <Layers className="w-4 h-4 mr-2" /> Interstitial Step Ads
+            </h3>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+              {localSettings.stepAds.map((code, idx) => (
+                <div key={idx} className="space-y-4">
+                  <label className="text-[9px] font-black uppercase tracking-widest text-slate-400">Stage {idx + 1} Ad Code</label>
+                  <textarea 
+                    className="w-full h-32 p-4 bg-slate-50 border border-slate-100 font-mono text-[10px] rounded-xl focus:ring-2 focus:ring-indigo-500"
+                    value={code}
+                    onChange={(e) => updateStepAd(idx, e.target.value)}
+                  />
+                </div>
+              ))}
+            </div>
+            
+            <button onClick={handleSave} className="w-full mt-10 py-6 bg-slate-900 text-white rounded-2xl font-black uppercase text-xs tracking-widest hover:bg-black transition shadow-xl">
+              Sync Ad Engine Configuration
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* SYSTEM TAB */}
+      {activeTab === 'api' && (
+        <div className="bg-white rounded-[3rem] p-10 md:p-16 border border-slate-200 shadow-sm animate-in">
+          <h2 className="text-3xl font-black mb-12 uppercase tracking-tighter text-slate-900 flex items-center">
+             <Terminal className="w-8 h-8 mr-4 text-indigo-600" /> Network Environment
+          </h2>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-12 mb-12">
+            <div className="space-y-10">
+              <div className="space-y-4">
+                <label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Platform Identity (Site Name)</label>
+                <input 
+                  type="text" 
+                  className="w-full p-5 bg-slate-50 border border-slate-200 rounded-2xl font-bold text-lg"
+                  value={localSettings.siteName}
+                  onChange={(e) => setLocalSettings({...localSettings, siteName: e.target.value})}
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-6">
+                <div className="space-y-4">
+                  <label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Wait Delay (Sec)</label>
+                  <div className="relative">
+                    <Clock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-300" />
+                    <input 
+                      type="number" 
+                      className="w-full pl-12 pr-4 py-5 bg-slate-50 border border-slate-200 rounded-2xl font-bold"
+                      value={localSettings.redirectDelay}
+                      onChange={(e) => setLocalSettings({...localSettings, redirectDelay: parseInt(e.target.value) || 0})}
+                    />
+                  </div>
+                </div>
+                <div className="space-y-4">
+                  <label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Total Steps</label>
+                  <div className="relative">
+                    <Layers className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-300" />
+                    <input 
+                      type="number" 
+                      className="w-full pl-12 pr-4 py-5 bg-slate-50 border border-slate-200 rounded-2xl font-bold"
+                      value={localSettings.totalSteps}
+                      onChange={(e) => setLocalSettings({...localSettings, totalSteps: parseInt(e.target.value) || 0})}
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="space-y-6">
+              <label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Global API Endpoint Structure</label>
+              <div className="p-8 bg-slate-900 rounded-[2.5rem] border border-white/5 space-y-6">
+                <div className="space-y-2">
+                  <p className="text-[9px] font-black text-indigo-400 uppercase tracking-widest">GET Request URL</p>
+                  <code className="block text-xs font-mono text-indigo-100 opacity-60 break-all bg-white/5 p-3 rounded-lg border border-white/10">
+                    {window.location.origin}/api?api=USER_KEY&url=TARGET_URL
+                  </code>
+                </div>
+                <div className="space-y-2">
+                  <p className="text-[9px] font-black text-indigo-400 uppercase tracking-widest">Expected Response</p>
+                  <code className="block text-xs font-mono text-green-400 bg-white/5 p-3 rounded-lg border border-white/10">
+                    {'{ "shortUrl": "' + window.location.origin + '/s/xyz123" }'}
+                  </code>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <button onClick={handleSave} className="w-full py-8 bg-indigo-600 text-white rounded-3xl font-black uppercase text-sm tracking-widest shadow-2xl hover:bg-indigo-700 transition">
+            Save System Configurations
+          </button>
+        </div>
+      )}
+
+      {/* ANALYTICS/PUBLISHERS TAB */}
       {activeTab === 'users' && (
         <div className="bg-white rounded-[3rem] border border-slate-200 shadow-sm animate-in overflow-hidden">
           <div className="p-10 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
