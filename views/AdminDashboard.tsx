@@ -13,7 +13,9 @@ import {
   Type,
   Copy,
   Key,
-  ChevronRight
+  ChevronRight,
+  Globe,
+  Settings2
 } from 'lucide-react';
 import { User, SiteSettings, UserRole, Link as LinkType } from '../types.ts';
 
@@ -45,7 +47,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user, settings, onUpdat
       <div className="min-h-[70vh] flex flex-col items-center justify-center p-6 text-center">
         <div className="bg-amber-50 p-8 rounded-[3rem] border border-amber-100 max-w-sm">
           <AlertTriangle className="w-16 h-16 text-amber-500 mx-auto mb-6" />
-          <h1 className="text-2xl font-black text-slate-900 mb-2">Restricted Area</h1>
+          <h1 className="text-2xl font-black text-slate-900 mb-2 text-center">Restricted Area</h1>
           <p className="text-slate-500 mb-8 font-medium">This zone is for platform administrators only.</p>
           <a href="/#/login" className="block w-full py-4 gradient-bg text-white rounded-2xl font-bold shadow-xl">Admin Login</a>
         </div>
@@ -58,6 +60,13 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user, settings, onUpdat
     localStorage.setItem('swiftlink_settings', JSON.stringify(localSettings));
     setSuccess(true);
     setTimeout(() => setSuccess(false), 3000);
+  };
+
+  const updateGlobalAd = (key: keyof SiteSettings['adSlots'], code: string) => {
+    setLocalSettings({
+      ...localSettings,
+      adSlots: { ...localSettings.adSlots, [key]: code }
+    });
   };
 
   const updateStepAd = (index: number, code: string) => {
@@ -90,9 +99,9 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user, settings, onUpdat
       <div className="flex flex-col md:flex-row md:items-center justify-between mb-16 gap-6">
         <div>
           <h1 className="text-5xl font-black text-slate-900 flex items-center tracking-tighter">
-            <ShieldCheck className="w-12 h-12 mr-4 text-indigo-600" /> Control Terminal
+            <ShieldCheck className="w-12 h-12 mr-4 text-indigo-600" /> Terminal Center
           </h1>
-          <p className="text-slate-500 mt-2 font-black uppercase text-[10px] tracking-[0.4em]">{localSettings.siteName} Master Node</p>
+          <p className="text-slate-500 mt-2 font-black uppercase text-[10px] tracking-[0.4em]">{localSettings.siteName} Management</p>
         </div>
         <div className="flex gap-4">
           <button 
@@ -113,7 +122,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user, settings, onUpdat
 
       {success && (
         <div className="mb-12 p-8 bg-green-50 border border-green-200 rounded-[2.5rem] flex items-center text-green-800 font-black animate-in slide-in-from-top-4 shadow-sm">
-          <CheckCircle className="w-8 h-8 mr-4" /> Global synchronization complete. Changes live across all redirects.
+          <CheckCircle className="w-8 h-8 mr-4" /> System synced. Ads are now appearing on all parts of the page globally.
         </div>
       )}
 
@@ -133,16 +142,39 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user, settings, onUpdat
                 onChange={(e) => setLocalSettings({...localSettings, siteName: e.target.value})}
                 placeholder="SwiftLink"
               />
-              <p className="mt-4 text-xs text-slate-400 font-bold uppercase tracking-widest flex items-center">
-                <ChevronRight className="w-4 h-4 mr-1" /> Dynamic replacement across header, footer & redirect flow.
-              </p>
             </div>
           </div>
 
-          {/* Ad Configuration */}
+          {/* Global Ads configuration */}
+          <div className="bg-white rounded-[3rem] p-12 shadow-sm border border-slate-100">
+            <h2 className="text-2xl font-black mb-10 flex items-center tracking-tight">
+              <Globe className="w-8 h-8 mr-4 text-indigo-600" /> Global Ad Distribution
+            </h2>
+            <p className="text-slate-500 mb-10 text-sm font-medium">These codes will automatically appear in specific positions across the entire website.</p>
+            
+            <div className="space-y-8">
+              {(Object.keys(localSettings.adSlots) as Array<keyof SiteSettings['adSlots']>).map((slotKey) => (
+                <div key={slotKey} className="p-8 bg-slate-50 rounded-[2rem] border border-slate-100">
+                  <div className="flex items-center justify-between mb-4">
+                    <span className="text-[10px] font-black text-indigo-900 uppercase tracking-[0.3em]">
+                      {slotKey.replace(/([A-Z])/g, ' $1').trim()}
+                    </span>
+                  </div>
+                  <textarea 
+                    className="w-full h-24 px-6 py-4 rounded-2xl border border-slate-200 text-[10px] font-mono focus:ring-4 focus:ring-indigo-100 focus:outline-none resize-none"
+                    placeholder="Paste global ad HTML/Script code here..."
+                    value={localSettings.adSlots[slotKey]}
+                    onChange={(e) => updateGlobalAd(slotKey, e.target.value)}
+                  />
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Interstitial Step Ads */}
           <div className="bg-white rounded-[3rem] p-12 shadow-sm border border-slate-100">
             <h2 className="text-2xl font-black mb-12 flex items-center tracking-tight">
-              <Layout className="w-8 h-8 mr-4 text-indigo-600" /> Redirect Infrastructure
+              <Settings2 className="w-8 h-8 mr-4 text-indigo-600" /> Redirect Interstitials
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-10 mb-12">
               <div className="p-10 bg-slate-50 rounded-[2.5rem] border border-slate-100">
@@ -157,7 +189,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user, settings, onUpdat
                 />
               </div>
               <div className="p-10 bg-slate-50 rounded-[2.5rem] border border-slate-100">
-                <label className="block text-[10px] font-black text-slate-400 uppercase tracking-[0.3em] mb-6">Step Delay (s)</label>
+                <label className="block text-[10px] font-black text-slate-400 uppercase tracking-[0.3em] mb-6">Timer (Seconds)</label>
                 <input 
                   type="number"
                   className="w-full px-8 py-5 bg-white border border-slate-200 rounded-2xl focus:ring-4 focus:ring-indigo-100 focus:outline-none font-black text-4xl text-center"
@@ -171,12 +203,12 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user, settings, onUpdat
               {[0, 1, 2, 3, 4].map(idx => (
                 <div key={idx} className={`p-8 rounded-[2rem] border transition-all duration-300 ${idx < localSettings.totalSteps ? 'bg-indigo-50/50 border-indigo-100' : 'bg-slate-50 border-slate-100 opacity-40 grayscale'}`}>
                   <div className="flex items-center justify-between mb-6">
-                    <span className="text-[10px] font-black text-indigo-900 uppercase tracking-[0.3em]">Monetization Unit {idx + 1}</span>
+                    <span className="text-[10px] font-black text-indigo-900 uppercase tracking-[0.3em]">Step {idx + 1} Ad Placement</span>
                     <span className={`text-[8px] font-black px-2 py-0.5 rounded ${idx < localSettings.totalSteps ? 'bg-indigo-600 text-white' : 'bg-slate-300 text-white'}`}>{idx < localSettings.totalSteps ? 'ACTIVE' : 'IDLE'}</span>
                   </div>
                   <textarea 
                     className="w-full h-32 px-6 py-4 rounded-2xl border border-slate-200 text-[10px] font-mono focus:ring-4 focus:ring-indigo-100 focus:outline-none resize-none"
-                    placeholder="<!-- HTML Ad Script -->"
+                    placeholder="Paste specific ad script for this step..."
                     value={localSettings.stepAds[idx] || ''}
                     onChange={(e) => updateStepAd(idx, e.target.value)}
                     disabled={idx >= localSettings.totalSteps}
@@ -191,11 +223,11 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user, settings, onUpdat
           {/* API Access Section */}
           <div className="bg-indigo-600 rounded-[3rem] p-12 text-white shadow-2xl relative overflow-hidden group">
             <h2 className="text-xl font-black mb-10 flex items-center relative z-10 tracking-tight">
-              <Key className="w-6 h-6 mr-4 text-indigo-300" /> Advanced Integration
+              <Key className="w-6 h-6 mr-4 text-indigo-300" /> API Access
             </h2>
             <div className="space-y-10 relative z-10">
                <div>
-                 <p className="text-[10px] font-black uppercase tracking-[0.4em] text-indigo-200 mb-4">Enterprise API Key</p>
+                 <p className="text-[10px] font-black uppercase tracking-[0.4em] text-indigo-200 mb-4">Your Private Key</p>
                  <div className="flex items-center bg-black/30 p-5 rounded-2xl border border-white/10 group-hover:bg-black/40 transition">
                    <code className="text-xs truncate font-mono mr-4 text-indigo-100 select-all">{user.apiKey}</code>
                    <button onClick={copyApiKey} className="shrink-0 p-3 hover:bg-white/20 rounded-xl transition">
@@ -203,38 +235,19 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user, settings, onUpdat
                    </button>
                  </div>
                </div>
-               
-               <div className="bg-black/20 p-6 rounded-[2rem] border border-white/10">
-                 <p className="text-[10px] font-black uppercase tracking-[0.4em] text-indigo-200 mb-4">API Documentation</p>
-                 <div className="space-y-4">
-                    <div className="flex justify-between items-center text-[10px] font-mono text-indigo-100 border-b border-white/10 pb-2">
-                      <span>Method:</span>
-                      <span className="font-bold">POST</span>
-                    </div>
-                    <div className="text-[10px] font-mono break-all text-indigo-200 opacity-80">
-                      {getBaseUrl()}api/shorten?key={user.apiKey.substring(0,8)}...
-                    </div>
-                 </div>
-               </div>
-               
-               <p className="text-[10px] italic text-indigo-200 leading-relaxed font-medium">Use this alphanumeric key to trigger redirects from external dashboards, Telegram bots, or Chrome extensions.</p>
+               <p className="text-[10px] italic text-indigo-200 leading-relaxed font-medium">Use this key to integrate with your other platforms.</p>
             </div>
             <div className="absolute top-0 right-0 w-64 h-64 gradient-bg blur-[100px] opacity-30 -mr-32 -mt-32"></div>
           </div>
 
           <div className="bg-slate-900 rounded-[3rem] p-12 text-white shadow-2xl relative overflow-hidden">
             <h2 className="text-xl font-black mb-10 flex items-center relative z-10 tracking-tight">
-              <Database className="w-6 h-6 mr-4 text-indigo-400" /> System Metrics
+              <Database className="w-6 h-6 mr-4 text-indigo-400" /> Statistics
             </h2>
             <div className="space-y-10 relative z-10">
               <div className="flex flex-col">
-                <span className="text-[10px] font-black text-slate-500 uppercase tracking-[0.4em] mb-2">Live URL Assets</span>
+                <span className="text-[10px] font-black text-slate-500 uppercase tracking-[0.4em] mb-2">Links Stored</span>
                 <span className="text-8xl font-black tracking-tighter leading-none">{links.length}</span>
-              </div>
-              <div className="h-px bg-slate-800 w-full" />
-              <div className="flex items-center space-x-3 text-indigo-400">
-                 <div className="w-2 h-2 rounded-full bg-indigo-400 animate-ping"></div>
-                 <span className="text-xs font-black uppercase tracking-widest">Global CDN: Online</span>
               </div>
             </div>
             <div className="absolute top-0 right-0 w-64 h-64 gradient-bg blur-[120px] opacity-40 -mr-32 -mt-32"></div>
@@ -244,13 +257,13 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user, settings, onUpdat
 
       <div className="bg-white rounded-[3.5rem] shadow-sm border border-slate-100 overflow-hidden">
         <div className="p-12 border-b border-slate-100 flex flex-col md:flex-row md:items-center justify-between gap-8 bg-slate-50/30">
-          <h2 className="text-3xl font-black tracking-tighter">URL Vault</h2>
+          <h2 className="text-3xl font-black tracking-tighter">Vault</h2>
           <div className="relative w-full md:w-96">
             <Search className="absolute left-5 top-1/2 -translate-y-1/2 w-6 h-6 text-slate-400" />
             <input 
               type="text" 
-              placeholder="Search destination or alias..." 
-              className="pl-14 pr-8 py-5 w-full bg-white border border-slate-200 rounded-3xl text-sm focus:ring-4 focus:ring-indigo-100 focus:outline-none font-bold shadow-sm"
+              placeholder="Search..." 
+              className="pl-14 pr-8 py-5 w-full bg-white border border-slate-200 rounded-3xl text-sm focus:ring-4 focus:ring-indigo-100 focus:outline-none font-bold"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
@@ -260,15 +273,15 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user, settings, onUpdat
           <table className="w-full text-left">
             <thead className="bg-slate-50 text-slate-400 text-[10px] uppercase font-black tracking-[0.4em]">
               <tr>
-                <th className="px-12 py-8">Path Extension</th>
-                <th className="px-12 py-8">Final Destination</th>
-                <th className="px-12 py-8 text-right">Action</th>
+                <th className="px-12 py-8">Path</th>
+                <th className="px-12 py-8">Target</th>
+                <th className="px-12 py-8 text-right">Delete</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
               {filteredLinks.length === 0 ? (
                 <tr>
-                  <td colSpan={3} className="px-12 py-32 text-center text-slate-300 font-black text-3xl italic tracking-tighter uppercase opacity-30">Vault is empty</td>
+                  <td colSpan={3} className="px-12 py-32 text-center text-slate-300 font-black text-3xl italic tracking-tighter uppercase opacity-30 text-center">Empty</td>
                 </tr>
               ) : filteredLinks.map(link => (
                 <tr key={link.id} className="hover:bg-slate-50/50 transition duration-300 group">

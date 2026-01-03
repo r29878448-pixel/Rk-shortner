@@ -1,13 +1,15 @@
 
 import React, { useState } from 'react';
 import { ChevronRight, Copy, Check, Loader2, Zap, Shield } from 'lucide-react';
-import { Link as LinkType } from '../types.ts';
+import { Link as LinkType, SiteSettings } from '../types.ts';
+import AdSlot from '../components/AdSlot.tsx';
 
 interface HomePageProps {
   siteName: string;
+  settings: SiteSettings;
 }
 
-const HomePage: React.FC<HomePageProps> = ({ siteName }) => {
+const HomePage: React.FC<HomePageProps> = ({ siteName, settings }) => {
   const [url, setUrl] = useState('');
   const [shortenedLink, setShortenedLink] = useState<LinkType | null>(null);
   const [isCopied, setIsCopied] = useState(false);
@@ -61,21 +63,26 @@ const HomePage: React.FC<HomePageProps> = ({ siteName }) => {
 
   return (
     <div className="bg-white min-h-[90vh]">
-      <section className="relative pt-24 pb-32 overflow-hidden">
+      <section className="relative pt-20 pb-32 overflow-hidden">
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[140%] h-[600px] bg-slate-50 -z-10 rounded-[200px] rotate-[-2deg]"></div>
         <div className="max-w-4xl mx-auto px-4 text-center">
-          <div className="inline-flex items-center px-4 py-1.5 rounded-full bg-indigo-50 text-indigo-700 text-[10px] font-black mb-8 uppercase tracking-[0.2em] border border-indigo-100">
+          
+          <AdSlot html={settings.adSlots.contentTop} className="mb-12" />
+
+          <div className="inline-flex items-center px-4 py-1.5 rounded-full bg-indigo-50 text-indigo-700 text-[10px] font-black mb-10 uppercase tracking-[0.2em] border border-indigo-100">
             Professional Monetization Platform
           </div>
+          
           <h1 className="text-6xl md:text-8xl font-black text-slate-900 tracking-tighter mb-8 leading-[0.9]">
             Shorten. <br />
             <span className="text-indigo-600">Secure. Earn.</span>
           </h1>
+          
           <p className="text-xl text-slate-500 max-w-xl mx-auto mb-14 leading-relaxed font-medium">
             The most advanced multi-step link infrastructure for professional creators. Powered by {siteName}.
           </p>
 
-          <div className="bg-white p-3 rounded-[3rem] shadow-2xl shadow-indigo-100 border border-slate-100 mb-10 relative group">
+          <div className="bg-white p-3 rounded-[3rem] shadow-2xl shadow-indigo-100 border border-slate-100 mb-10 relative group max-w-3xl mx-auto">
             <form onSubmit={handleShorten} className="flex flex-col md:flex-row gap-3">
               <input 
                 type="url" 
@@ -96,7 +103,7 @@ const HomePage: React.FC<HomePageProps> = ({ siteName }) => {
           </div>
 
           {shortenedLink && (
-            <div className="bg-slate-900 rounded-[3rem] p-12 text-white shadow-2xl relative overflow-hidden group">
+            <div className="bg-slate-900 rounded-[3rem] p-12 text-white shadow-2xl relative overflow-hidden group max-w-3xl mx-auto mb-16">
               <div className="flex flex-col md:flex-row items-center justify-between gap-8 relative z-10">
                 <div className="text-left w-full overflow-hidden">
                   <p className="text-indigo-400 text-xs font-black uppercase tracking-[0.3em] mb-4">Secure Path Generated</p>
@@ -117,6 +124,8 @@ const HomePage: React.FC<HomePageProps> = ({ siteName }) => {
               <div className="absolute top-0 right-0 w-64 h-64 gradient-bg blur-[100px] opacity-20 -mr-32 -mt-32"></div>
             </div>
           )}
+
+          <AdSlot html={settings.adSlots.contentBottom} className="mt-12" />
 
           <div className="mt-20 flex flex-wrap justify-center gap-12 text-slate-400 font-black text-[10px] uppercase tracking-[0.3em]">
             <div className="flex items-center space-x-4">

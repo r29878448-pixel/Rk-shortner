@@ -8,18 +8,20 @@ export const DEFAULT_SETTINGS: SiteSettings = {
   captchaSiteKey: '6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI', 
   captchaSecretKey: 'demo-secret',
   adSlots: {
-    top: '<div class="bg-indigo-50 h-24 flex flex-col items-center justify-center border border-dashed border-indigo-200 text-indigo-400 text-xs font-black rounded-xl"><span>728x90 Leaderboard Ad</span></div>',
-    middle: '<div class="bg-indigo-50 h-64 flex flex-col items-center justify-center border border-dashed border-indigo-200 text-indigo-400 text-xs font-black rounded-xl"><span>300x600 Display Ad</span></div>',
-    bottom: '<div class="bg-indigo-50 h-24 flex flex-col items-center justify-center border border-dashed border-indigo-200 text-indigo-400 text-xs font-black rounded-xl"><span>Sticky Footer Ad</span></div>'
+    globalHeader: '<div class="bg-indigo-50/50 p-2 text-center text-[10px] font-bold text-indigo-400 border-b border-indigo-100">GLOBAL HEADER AD SLOT</div>',
+    globalFooter: '<div class="bg-slate-800 p-8 text-center text-[10px] font-bold text-slate-500 border-t border-slate-700">GLOBAL FOOTER AD SLOT</div>',
+    globalSidebar: '<div class="bg-slate-50 p-4 h-64 flex items-center justify-center text-[10px] font-bold text-slate-300 border border-dashed rounded-xl">SIDEBAR AD</div>',
+    contentTop: '<div class="my-6 p-4 bg-amber-50 border border-amber-100 rounded-xl text-center text-amber-600 font-bold text-xs uppercase">Premium Advertisement Slot</div>',
+    contentBottom: '<div class="my-6 p-4 bg-indigo-50 border border-indigo-100 rounded-xl text-center text-indigo-600 font-bold text-xs uppercase">High-Conversion Ad Slot</div>'
   },
   stepAds: [
-    '<div class="p-4 bg-slate-100 rounded-xl text-center font-bold text-slate-400">ADS SLOT 1</div>',
-    '<div class="p-4 bg-slate-100 rounded-xl text-center font-bold text-slate-400">ADS SLOT 2</div>',
-    '<div class="p-4 bg-slate-100 rounded-xl text-center font-bold text-slate-400">ADS SLOT 3</div>',
-    '<div class="p-4 bg-slate-100 rounded-xl text-center font-bold text-slate-400">ADS SLOT 4</div>',
-    '<div class="p-4 bg-slate-100 rounded-xl text-center font-bold text-slate-400">ADS SLOT 5</div>'
+    '<div class="p-8 bg-slate-50 rounded-2xl border-2 border-dashed border-slate-200 text-center text-slate-400 font-black">INTERSTITIAL AD SLOT 1</div>',
+    '<div class="p-8 bg-slate-50 rounded-2xl border-2 border-dashed border-slate-200 text-center text-slate-400 font-black">INTERSTITIAL AD SLOT 2</div>',
+    '<div class="p-8 bg-slate-50 rounded-2xl border-2 border-dashed border-slate-200 text-center text-slate-400 font-black">INTERSTITIAL AD SLOT 3</div>',
+    '<div class="p-8 bg-slate-50 rounded-2xl border-2 border-dashed border-slate-200 text-center text-slate-400 font-black">INTERSTITIAL AD SLOT 4</div>',
+    '<div class="p-8 bg-slate-50 rounded-2xl border-2 border-dashed border-slate-200 text-center text-slate-400 font-black">INTERSTITIAL AD SLOT 5</div>'
   ],
-  redirectDelay: 15,
+  redirectDelay: 10,
   totalSteps: 3
 };
 

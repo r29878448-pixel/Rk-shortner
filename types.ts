@@ -32,15 +32,17 @@ export interface Link {
 }
 
 export interface SiteSettings {
-  siteName: string; // New: Customizable branding
+  siteName: string;
   adsEnabled: boolean;
   captchaEnabled: boolean;
   captchaSiteKey: string;
   captchaSecretKey: string;
   adSlots: {
-    top: string;
-    middle: string;
-    bottom: string;
+    globalHeader: string;
+    globalFooter: string;
+    globalSidebar: string;
+    contentTop: string;
+    contentBottom: string;
   };
   stepAds: string[]; 
   redirectDelay: number; 
@@ -54,5 +56,5 @@ export interface BlogPost {
   content: string;
   author: string;
   date: string;
-  imageUrl: string; // Added image support
+  imageUrl: string;
 }
