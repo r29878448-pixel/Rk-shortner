@@ -6,26 +6,23 @@ import {
   LogOut, 
   Menu, 
   X, 
-  ShieldCheck,
-  FileText,
-  Settings as SettingsIcon
+  ShieldCheck
 } from 'lucide-react';
-import { UserRole, User, SiteSettings } from './types';
-import { DEFAULT_SETTINGS } from './constants';
+import { User, SiteSettings } from './types.ts';
+import { DEFAULT_SETTINGS } from './constants.tsx';
 
 // Views
-import HomePage from './views/HomePage';
-import AdminDashboard from './views/AdminDashboard';
-import RedirectFlow from './views/RedirectFlow';
-import LoginPage from './views/LoginPage';
-import BlogPage from './views/BlogPage';
+import HomePage from './views/HomePage.tsx';
+import AdminDashboard from './views/AdminDashboard.tsx';
+import RedirectFlow from './views/RedirectFlow.tsx';
+import LoginPage from './views/LoginPage.tsx';
+import BlogPage from './views/BlogPage.tsx';
 
 const App: React.FC = () => {
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [settings, setSettings] = useState<SiteSettings>(DEFAULT_SETTINGS);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
-  // Persistence Logic for Blogger
   useEffect(() => {
     const storedUser = localStorage.getItem('swiftlink_user');
     if (storedUser) {
@@ -40,7 +37,6 @@ const App: React.FC = () => {
   const handleLogout = () => {
     localStorage.removeItem('swiftlink_user');
     setCurrentUser(null);
-    window.location.hash = '#/';
   };
 
   const Navigation = () => {
@@ -53,7 +49,7 @@ const App: React.FC = () => {
           <div className="flex justify-between h-16">
             <div className="flex items-center">
               <RouterLink to="/" className="flex items-center space-x-2">
-                <div className="w-8 h-8 gradient-bg rounded-lg flex items-center justify-center shadow-lg shadow-indigo-200">
+                <div className="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center shadow-lg">
                   <LinkIcon className="text-white w-5 h-5" />
                 </div>
                 <span className="text-xl font-bold text-slate-900 tracking-tight">SwiftLink</span>
@@ -119,9 +115,9 @@ const App: React.FC = () => {
   };
 
   const Footer = () => (
-    <footer className="bg-slate-900 text-white py-8 border-t border-slate-800">
+    <footer className="bg-slate-900 text-white py-8 border-t border-slate-800 mt-auto">
       <div className="max-w-7xl mx-auto px-4 text-center text-slate-500 text-xs">
-        © {new Date().getFullYear()} SwiftLink Master Platform. Built for Blogger.
+        © {new Date().getFullYear()} SwiftLink Master Platform. Professional Edition.
       </div>
     </footer>
   );

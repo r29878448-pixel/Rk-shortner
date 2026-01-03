@@ -1,8 +1,16 @@
 
 import { GoogleGenAI, Type } from "@google/genai";
 
-// Fix: Initialize GoogleGenAI using a named parameter with process.env.API_KEY directly as per guidelines
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+// Safe initialization for browser environments
+const getApiKey = () => {
+  try {
+    return (window as any).process?.env?.API_KEY || '';
+  } catch {
+    return '';
+  }
+};
+
+const ai = new GoogleGenAI({ apiKey: getApiKey() });
 
 export const geminiService = {
   async generateBlogPosts() {
