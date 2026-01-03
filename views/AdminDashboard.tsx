@@ -30,9 +30,15 @@ interface AdminDashboardProps {
 }
 
 const AdminDashboard: React.FC<AdminDashboardProps> = ({ user, settings, onUpdateSettings }) => {
-  // Renamed 'settings' tab to 'ads' internally for total clarity and to fix the 'not opening' bug
   const [activeTab, setActiveTab] = useState<'analytics' | 'links' | 'ads' | 'api'>('analytics');
-  const [localSettings, setLocalSettings] = useState<SiteSettings>(settings);
+  // Initialize with fallback to prevent "not opening" if settings are partially missing
+  const [localSettings, setLocalSettings] = useState<SiteSettings>({
+    ...settings,
+    adSlots: {
+      ...settings.adSlots,
+      contentAds: settings.adSlots.contentAds || []
+    }
+  });
   const [success, setSuccess] = useState(false);
   const [links, setLinks] = useState<LinkType[]>([]);
   const [clickEvents, setClickEvents] = useState<ClickEvent[]>([]);
@@ -45,9 +51,15 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user, settings, onUpdat
     setClickEvents(JSON.parse(localStorage.getItem('swiftlink_click_events') || '[]'));
   }, []);
 
-  // Sync local settings when global settings change (e.g. on mount)
+  // Sync when parent settings change
   useEffect(() => {
-    setLocalSettings(settings);
+    setLocalSettings({
+      ...settings,
+      adSlots: {
+        ...settings.adSlots,
+        contentAds: settings.adSlots.contentAds || []
+      }
+    });
   }, [settings]);
 
   const stats = useMemo(() => {
@@ -60,11 +72,11 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user, settings, onUpdat
 
   if (!user || user.role !== UserRole.ADMIN) {
     return (
-      <div className="min-h-[60vh] flex items-center justify-center">
-        <div className="bg-white p-10 rounded-2xl border border-slate-200 shadow-xl text-center">
-          <AlertTriangle className="w-12 h-12 text-red-500 mx-auto mb-4" />
-          <h2 className="text-xl font-black uppercase text-slate-900">Restricted Access</h2>
-          <p className="text-slate-500 text-sm mt-2">Administrative privileges required.</p>
+      <div className="min-h-[60vh] flex items-center justify-center p-6">
+        <div className="bg-white p-10 rounded-3xl border border-slate-200 shadow-2xl text-center max-w-sm">
+          <AlertTriangle className="w-16 h-16 text-red-500 mx-auto mb-6" />
+          <h2 className="text-2xl font-black uppercase text-slate-900 tracking-tighter">Access Denied</h2>
+          <p className="text-slate-500 text-sm mt-3 font-medium">Administrator authentication required to access this terminal.</p>
         </div>
       </div>
     );
@@ -78,7 +90,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user, settings, onUpdat
   };
 
   const deleteLink = (id: string) => {
-    if(!confirm("Are you sure you want to delete this link permanently?")) return;
+    if(!confirm("Permanently wipe this relay link from the database?")) return;
     const updated = links.filter(l => l.id !== id);
     setLinks(updated);
     localStorage.setItem('swiftlink_global_links', JSON.stringify(updated));
@@ -91,17 +103,17 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user, settings, onUpdat
   };
 
   const platformUrl = window.location.origin + window.location.pathname.replace(/\/[^\/]*$/, '/');
-  // VP Links style simple endpoint
-  const apiFormat = `${platformUrl}#/api?api=${user.apiKey}&url=YOUR_LONG_URL`;
+  // VP Links style standard format
+  const apiFormat = `${platformUrl}#/api?api=${user.apiKey}&url=https://yourlink.com`;
 
   const addContentAd = () => {
-    setLocalSettings({
-      ...localSettings,
+    setLocalSettings(prev => ({
+      ...prev,
       adSlots: {
-        ...localSettings.adSlots,
-        contentAds: [...(localSettings.adSlots.contentAds || []), '']
+        ...prev.adSlots,
+        contentAds: [...(prev.adSlots.contentAds || []), '']
       }
-    });
+    }));
   };
 
   const removeContentAd = (index: number) => {
@@ -123,27 +135,26 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user, settings, onUpdat
   };
 
   return (
-    <div className="max-w-7xl mx-auto px-4 py-8 md:py-12">
-      {/* Tab Navigation */}
-      <div className="flex flex-col lg:flex-row lg:items-center justify-between mb-10 gap-6">
+    <div className="max-w-7xl mx-auto px-4 py-8 md:py-16">
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between mb-12 gap-8">
         <div>
-          <h1 className="text-3xl font-black text-slate-900 flex items-center uppercase tracking-tighter">
-            <ShieldCheck className="w-8 h-8 mr-3 text-indigo-600" /> Control Center
+          <h1 className="text-4xl font-black text-slate-900 flex items-center uppercase tracking-tighter">
+            <ShieldCheck className="w-10 h-10 mr-4 text-indigo-600" /> Admin Station
           </h1>
-          <p className="text-slate-400 text-[10px] font-bold uppercase tracking-[0.3em] mt-1">Operational Network Terminal</p>
+          <p className="text-slate-400 text-[11px] font-bold uppercase tracking-[0.4em] mt-2">Enterprise Network Control Terminal</p>
         </div>
         
-        <div className="flex bg-white border border-slate-200 p-1 rounded-xl shadow-sm overflow-x-auto no-scrollbar">
+        <div className="flex bg-white border border-slate-200 p-1.5 rounded-2xl shadow-xl overflow-x-auto no-scrollbar">
           {[
-            { id: 'analytics', label: 'Dashboard', icon: <BarChart3 className="w-4 h-4 mr-2" /> },
-            { id: 'links', label: 'Links', icon: <LinkIcon className="w-4 h-4 mr-2" /> },
+            { id: 'analytics', label: 'Metrics', icon: <BarChart3 className="w-4 h-4 mr-2" /> },
+            { id: 'links', label: 'Link Vault', icon: <LinkIcon className="w-4 h-4 mr-2" /> },
             { id: 'ads', label: 'Ads Manager', icon: <Globe className="w-4 h-4 mr-2" /> },
-            { id: 'api', label: 'API Setup', icon: <Terminal className="w-4 h-4 mr-2" /> }
+            { id: 'api', label: 'API Relay', icon: <Terminal className="w-4 h-4 mr-2" /> }
           ].map((tab) => (
             <button 
               key={tab.id}
               onClick={() => setActiveTab(tab.id as any)}
-              className={`flex items-center px-6 py-3 rounded-lg font-black text-xs uppercase tracking-widest transition-all whitespace-nowrap ${
+              className={`flex items-center px-8 py-4 rounded-xl font-black text-xs uppercase tracking-widest transition-all ${
                 activeTab === tab.id ? 'bg-indigo-600 text-white shadow-lg' : 'text-slate-500 hover:bg-slate-50'
               }`}
             >
@@ -154,71 +165,68 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user, settings, onUpdat
       </div>
 
       {success && (
-        <div className="mb-8 p-5 bg-green-600 text-white rounded-xl font-black text-sm flex items-center shadow-xl animate-in">
-          <CheckCircle className="w-6 h-6 mr-4" /> Global network configuration synchronized.
+        <div className="mb-10 p-6 bg-green-600 text-white rounded-2xl font-black text-sm flex items-center shadow-2xl animate-in">
+          <CheckCircle className="w-6 h-6 mr-4" /> System protocol updated. Changes are live.
         </div>
       )}
 
-      {/* Analytics Tab */}
       {activeTab === 'analytics' && (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 animate-in">
-          <div className="bg-white border border-slate-200 p-10 rounded-2xl shadow-sm">
-             <p className="text-[10px] font-black uppercase text-slate-400 mb-2 tracking-widest">Global Conversions</p>
-             <h3 className="text-5xl font-black text-slate-900 tracking-tighter">{stats.totalClicks}</h3>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 animate-in">
+          <div className="bg-white border border-slate-200 p-12 rounded-[2.5rem] shadow-sm">
+             <p className="text-[10px] font-black uppercase text-slate-400 mb-2 tracking-[0.3em]">Total Conversions</p>
+             <h3 className="text-6xl font-black text-slate-900 tracking-tighter">{stats.totalClicks}</h3>
           </div>
-          <div className="bg-white border border-slate-200 p-10 rounded-2xl shadow-sm">
-             <p className="text-[10px] font-black uppercase text-slate-400 mb-2 tracking-widest">Active Relays</p>
-             <h3 className="text-5xl font-black text-slate-900 tracking-tighter">{stats.totalLinks}</h3>
+          <div className="bg-white border border-slate-200 p-12 rounded-[2.5rem] shadow-sm">
+             <p className="text-[10px] font-black uppercase text-slate-400 mb-2 tracking-[0.3em]">Active Relays</p>
+             <h3 className="text-6xl font-black text-slate-900 tracking-tighter">{stats.totalLinks}</h3>
           </div>
-          <div className="bg-white border border-slate-200 p-10 rounded-2xl shadow-sm">
-             <p className="text-[10px] font-black uppercase text-slate-400 mb-2 tracking-widest">Top Performance</p>
-             <h3 className="text-xl font-black text-slate-900 truncate">/s/{stats.topLink?.shortCode || 'N/A'}</h3>
-             <span className="text-indigo-600 font-bold text-xs">{(stats.topLink?.clicks || 0)} total hits</span>
+          <div className="bg-white border border-slate-200 p-12 rounded-[2.5rem] shadow-sm">
+             <p className="text-[10px] font-black uppercase text-slate-400 mb-2 tracking-[0.3em]">Top Performer</p>
+             <h3 className="text-2xl font-black text-slate-900 truncate">/s/{stats.topLink?.shortCode || 'N/A'}</h3>
+             <span className="text-indigo-600 font-bold text-xs uppercase tracking-widest mt-2 block">{(stats.topLink?.clicks || 0)} Successful Hits</span>
           </div>
         </div>
       )}
 
-      {/* API Integration Tab */}
       {activeTab === 'api' && (
-        <div className="space-y-8 animate-in">
-          <div className="bg-white border border-slate-200 rounded-2xl p-8 md:p-12 shadow-sm">
-            <div className="flex items-center mb-8 pb-6 border-b border-slate-100">
-              <Cpu className="w-8 h-8 text-indigo-600 mr-4" />
+        <div className="space-y-10 animate-in">
+          <div className="bg-white border border-slate-200 rounded-[3rem] p-10 md:p-16 shadow-sm">
+            <div className="flex items-center mb-10 pb-8 border-b border-slate-100">
+              <Cpu className="w-10 h-10 text-indigo-600 mr-5" />
               <div>
-                <h2 className="text-2xl font-black text-slate-900 uppercase tracking-tighter">API Integration</h2>
-                <p className="text-slate-400 text-xs font-bold uppercase tracking-widest">Standard VP Links Compatible Endpoint</p>
+                <h2 className="text-3xl font-black text-slate-900 uppercase tracking-tighter">API Infrastructure</h2>
+                <p className="text-slate-400 text-xs font-bold uppercase tracking-[0.3em]">Platform Integration Bridge</p>
               </div>
             </div>
             
-            <p className="text-sm text-slate-500 mb-10 font-medium leading-relaxed max-w-2xl">
-              Use this simple GET-request format to integrate with third-party platforms, bots, or scripts. 
-              The system accepts your API key and a target URL to return an instant shortened relay link.
+            <p className="text-base text-slate-500 mb-12 font-medium leading-relaxed max-w-2xl">
+              Our API is built on a "Silent GET" protocol. Connect your external dashboards or tools by using the secure endpoint below.
             </p>
 
-            <div className="space-y-8">
-              <div className="space-y-3">
-                <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em]">Full Integration Endpoint</label>
-                <div className="flex items-center bg-slate-900 rounded-xl p-5 font-mono text-xs text-indigo-300 shadow-inner group overflow-hidden">
-                  <span className="flex-grow truncate mr-4">{apiFormat}</span>
-                  <button onClick={() => handleCopy(apiFormat, 'apiFmt')} className="text-slate-400 hover:text-white shrink-0 p-2 bg-white/5 rounded transition">
-                    {copyStatus['apiFmt'] ? <Check className="w-4 h-4 text-green-500" /> : <Copy className="w-4 h-4" />}
+            <div className="space-y-10">
+              <div className="space-y-4">
+                <label className="text-[11px] font-black text-slate-400 uppercase tracking-[0.4em]">Integration Endpoint URL</label>
+                <div className="flex items-center bg-slate-900 rounded-2xl p-6 font-mono text-sm text-indigo-300 shadow-2xl group overflow-hidden">
+                  <span className="flex-grow truncate mr-6">{apiFormat}</span>
+                  <button onClick={() => handleCopy(apiFormat, 'apiFmt')} className="text-slate-400 hover:text-white shrink-0 p-3 bg-white/10 rounded-xl transition-all active:scale-90">
+                    {copyStatus['apiFmt'] ? <Check className="w-5 h-5 text-green-500" /> : <Copy className="w-5 h-5" />}
                   </button>
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                 <div className="bg-slate-50 p-6 rounded-xl border border-slate-100">
-                    <p className="text-[10px] font-black text-slate-400 uppercase mb-3 tracking-widest">Your Private Token</p>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                 <div className="bg-slate-50 p-8 rounded-3xl border border-slate-100">
+                    <p className="text-[11px] font-black text-slate-400 uppercase mb-4 tracking-widest">Master API Token</p>
                     <div className="flex items-center justify-between">
-                       <code className="text-sm font-mono font-black text-indigo-600">{user.apiKey}</code>
-                       <button onClick={() => handleCopy(user.apiKey, 'keyOnly')} className="text-slate-400 p-1 hover:text-indigo-600 transition">
-                         {copyStatus['keyOnly'] ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+                       <code className="text-lg font-mono font-black text-indigo-600">{user.apiKey}</code>
+                       <button onClick={() => handleCopy(user.apiKey, 'keyOnly')} className="text-slate-300 p-2 hover:text-indigo-600 transition">
+                         {copyStatus['keyOnly'] ? <Check className="w-6 h-6" /> : <Copy className="w-6 h-6" />}
                        </button>
                     </div>
                  </div>
-                 <div className="bg-indigo-600 p-6 rounded-xl text-white shadow-lg shadow-indigo-100">
-                    <p className="text-[10px] font-black uppercase mb-2 tracking-widest text-indigo-200">Protocol Type</p>
-                    <p className="text-sm font-black uppercase tracking-widest">HTTP GET / JSON RETURN</p>
+                 <div className="bg-slate-900 p-8 rounded-3xl text-white flex flex-col justify-center">
+                    <p className="text-[11px] font-black uppercase mb-2 tracking-[0.3em] text-indigo-400">Response Protocol</p>
+                    <p className="text-lg font-black uppercase tracking-widest">200 OK • CLEAN TEXT RELAY</p>
                  </div>
               </div>
             </div>
@@ -226,117 +234,115 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user, settings, onUpdat
         </div>
       )}
 
-      {/* Ads Manager Tab (The fixed settings tab) */}
       {activeTab === 'ads' && (
-        <div className="space-y-8 animate-in">
-          <div className="bg-white rounded-2xl p-8 md:p-14 border border-slate-200 shadow-sm">
-            <h2 className="text-2xl font-black mb-10 flex items-center uppercase text-slate-900 tracking-tighter">
-              <Globe className="w-8 h-8 mr-4 text-indigo-600" /> Content Monetization
+        <div className="space-y-10 animate-in">
+          <div className="bg-white rounded-[3rem] p-10 md:p-16 border border-slate-200 shadow-sm">
+            <h2 className="text-3xl font-black mb-12 flex items-center uppercase text-slate-900 tracking-tighter">
+              <Globe className="w-10 h-10 mr-5 text-indigo-600" /> Ad Network Manager
             </h2>
             
-            <div className="space-y-8 mb-12">
-              <div className="space-y-3">
-                <label className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-400">Header Script Slot</label>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 mb-16">
+              <div className="space-y-4">
+                <label className="text-[11px] font-black uppercase tracking-[0.4em] text-slate-400">Header Script Slot</label>
                 <textarea 
-                  className="w-full h-24 p-5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-900 font-mono focus:border-indigo-500 outline-none transition shadow-inner resize-none"
+                  className="w-full h-32 p-6 bg-slate-50 border border-slate-200 rounded-2xl text-xs text-slate-900 font-mono focus:border-indigo-500 outline-none transition shadow-inner resize-none"
                   value={localSettings.adSlots.top}
                   onChange={(e) => setLocalSettings({...localSettings, adSlots: {...localSettings.adSlots, top: e.target.value}})}
-                  placeholder="Paste <script> or <iframe> here..."
+                  placeholder="Paste ad script tags here..."
                 />
               </div>
-              <div className="space-y-3">
-                <label className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-400">Footer Script Slot</label>
+              <div className="space-y-4">
+                <label className="text-[11px] font-black uppercase tracking-[0.4em] text-slate-400">Footer Script Slot</label>
                 <textarea 
-                  className="w-full h-24 p-5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-900 font-mono focus:border-indigo-500 outline-none transition shadow-inner resize-none"
+                  className="w-full h-32 p-6 bg-slate-50 border border-slate-200 rounded-2xl text-xs text-slate-900 font-mono focus:border-indigo-500 outline-none transition shadow-inner resize-none"
                   value={localSettings.adSlots.bottom}
                   onChange={(e) => setLocalSettings({...localSettings, adSlots: {...localSettings.adSlots, bottom: e.target.value}})}
-                  placeholder="Paste <script> or <iframe> here..."
+                  placeholder="Paste ad script tags here..."
                 />
               </div>
             </div>
 
-            <div className="border-t border-slate-100 pt-10">
-               <div className="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
+            <div className="border-t border-slate-100 pt-12">
+               <div className="flex flex-col md:flex-row md:items-center justify-between mb-10 gap-6">
                   <div>
-                    <h3 className="text-sm font-black uppercase tracking-widest text-slate-900">In-Content Ad List</h3>
-                    <p className="text-xs text-slate-400 font-medium">Add multiple ads to be spread across the redirect article content.</p>
+                    <h3 className="text-xl font-black uppercase tracking-widest text-slate-900">In-Content Ad Chain</h3>
+                    <p className="text-xs text-slate-400 font-bold uppercase tracking-widest mt-1">Multi-slot Blog monetization engine</p>
                   </div>
-                  <button onClick={addContentAd} className="flex items-center px-6 py-3 bg-indigo-600 text-white rounded-lg text-xs font-black uppercase tracking-widest shadow-lg hover:bg-indigo-700 transition active:scale-95 shrink-0">
-                    <Plus className="w-4 h-4 mr-2" /> New Ad Slot
+                  <button onClick={addContentAd} className="flex items-center px-10 py-5 bg-indigo-600 text-white rounded-2xl text-xs font-black uppercase tracking-widest shadow-2xl hover:bg-indigo-700 transition active:scale-95 shrink-0">
+                    <Plus className="w-5 h-5 mr-3" /> Add Link In-Content Ad
                   </button>
                </div>
                
-               <div className="space-y-6">
+               <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                   {localSettings.adSlots.contentAds.map((ad, idx) => (
-                    <div key={idx} className="relative bg-slate-50 p-8 rounded-2xl border border-slate-200 group shadow-sm">
+                    <div key={idx} className="relative bg-slate-50 p-10 rounded-[2.5rem] border border-slate-200 group transition hover:border-indigo-200">
                        <button 
                          onClick={() => removeContentAd(idx)}
-                         className="absolute top-6 right-6 text-slate-300 hover:text-red-500 transition p-2 bg-white rounded-full shadow-sm"
+                         className="absolute top-8 right-8 text-slate-300 hover:text-red-500 transition p-2 bg-white rounded-xl shadow-md border border-slate-100"
                        >
-                         <X className="w-4 h-4" />
+                         <X className="w-5 h-5" />
                        </button>
-                       <label className="text-[9px] font-black uppercase text-slate-400 block mb-3 tracking-[0.2em]">Article Placement #{idx + 1}</label>
+                       <label className="text-[10px] font-black uppercase text-slate-400 block mb-4 tracking-[0.3em]">Article Slot #{idx + 1}</label>
                        <textarea 
-                         className="w-full h-32 p-5 bg-white border border-slate-200 rounded-xl text-xs font-mono focus:border-indigo-500 outline-none transition"
-                         placeholder="Paste ad script/HTML code here..."
+                         className="w-full h-40 p-6 bg-white border border-slate-200 rounded-2xl text-xs font-mono focus:border-indigo-500 outline-none transition shadow-sm"
+                         placeholder="Paste your ad unit HTML/JS..."
                          value={ad}
                          onChange={(e) => updateContentAd(idx, e.target.value)}
                        />
                     </div>
                   ))}
-                  {localSettings.adSlots.contentAds.length === 0 && (
-                    <div className="p-16 border-2 border-dashed border-slate-200 rounded-3xl text-center">
-                       <Globe className="w-12 h-12 text-slate-200 mx-auto mb-4" />
-                       <p className="text-slate-400 font-bold text-sm">No in-content ads configured.</p>
+                  {(!localSettings.adSlots.contentAds || localSettings.adSlots.contentAds.length === 0) && (
+                    <div className="col-span-full p-20 border-4 border-dashed border-slate-100 rounded-[3rem] text-center">
+                       <Globe className="w-16 h-16 text-slate-100 mx-auto mb-6" />
+                       <p className="text-slate-300 font-black uppercase tracking-[0.2em]">The Ad Chain is Empty</p>
                     </div>
                   )}
                </div>
             </div>
           </div>
 
-          <button onClick={handleSave} className="w-full py-6 bg-indigo-600 text-white rounded-2xl font-black uppercase text-xs tracking-widest shadow-2xl hover:bg-indigo-700 transition active:scale-95">
-            Synchronize All System Ads
+          <button onClick={handleSave} className="w-full py-8 bg-indigo-600 text-white rounded-[2rem] font-black uppercase text-sm tracking-[0.2em] shadow-2xl hover:bg-indigo-700 transition active:scale-95">
+            Synchronize Global Ad Infrastructure
           </button>
         </div>
       )}
 
-      {/* Links Tab */}
       {activeTab === 'links' && (
-        <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden animate-in">
-           <div className="p-8 border-b border-slate-100 flex flex-col md:flex-row md:items-center justify-between bg-slate-50 gap-6">
-             <h2 className="text-sm font-black text-slate-900 uppercase tracking-tighter">Active Network Relays</h2>
-             <div className="relative w-full md:w-80">
+        <div className="bg-white rounded-[3rem] shadow-sm border border-slate-200 overflow-hidden animate-in">
+           <div className="p-10 border-b border-slate-100 flex flex-col md:flex-row md:items-center justify-between bg-slate-50 gap-8">
+             <h2 className="text-xl font-black text-slate-900 uppercase tracking-tighter">Relay Link Database</h2>
+             <div className="relative w-full md:w-96">
                <input 
                  type="text" 
-                 placeholder="Search by code..." 
-                 className="w-full px-5 py-3.5 bg-white border border-slate-200 rounded-xl text-xs font-bold focus:ring-4 focus:ring-indigo-100 focus:outline-none transition-all"
+                 placeholder="Search link codes..." 
+                 className="w-full px-6 py-4 bg-white border border-slate-200 rounded-2xl text-sm font-bold focus:ring-8 focus:ring-indigo-50 focus:outline-none transition-all shadow-sm"
                  value={searchTerm}
                  onChange={(e) => setSearchTerm(e.target.value)}
                />
              </div>
            </div>
            <div className="overflow-x-auto">
-             <table className="w-full text-left min-w-[700px]">
-               <thead className="bg-slate-100 text-slate-400 text-[10px] font-black uppercase tracking-widest border-b border-slate-200">
+             <table className="w-full text-left min-w-[800px]">
+               <thead className="bg-slate-100 text-slate-400 text-[11px] font-black uppercase tracking-widest border-b border-slate-200">
                  <tr>
-                   <th className="px-10 py-6">Relay Path</th>
-                   <th className="px-10 py-6">Target Origin</th>
-                   <th className="px-10 py-6">Hits</th>
-                   <th className="px-10 py-6 text-right">Actions</th>
+                   <th className="px-12 py-8">Path</th>
+                   <th className="px-12 py-8">Destination</th>
+                   <th className="px-12 py-8">Hits</th>
+                   <th className="px-12 py-8 text-right">Actions</th>
                  </tr>
                </thead>
                <tbody className="divide-y divide-slate-100">
                  {links.filter(l => l.shortCode.includes(searchTerm)).map(link => (
-                   <tr key={link.id} className="hover:bg-indigo-50/20 transition-colors">
-                     <td className="px-10 py-8 font-black text-indigo-600 text-lg">/s/{link.shortCode}</td>
-                     <td className="px-10 py-8 truncate max-w-[250px] text-slate-500 font-mono text-xs">{link.originalUrl}</td>
-                     <td className="px-10 py-8 font-black text-slate-900 text-lg">{link.clicks || 0}</td>
-                     <td className="px-10 py-8 text-right flex justify-end space-x-3">
-                       <button onClick={() => handleCopy(`${platformUrl}#/s/${link.shortCode}`, link.id)} className="p-3 text-slate-400 hover:text-indigo-600 bg-white border border-slate-100 rounded-lg shadow-sm transition active:scale-90">
-                         {copyStatus[link.id] ? <Check className="w-5 h-5 text-green-500" /> : <LinkIcon className="w-5 h-5" />}
+                   <tr key={link.id} className="hover:bg-indigo-50/10 transition-colors">
+                     <td className="px-12 py-10 font-black text-indigo-600 text-xl tracking-tighter">/s/{link.shortCode}</td>
+                     <td className="px-12 py-10 truncate max-w-[300px] text-slate-500 font-mono text-sm">{link.originalUrl}</td>
+                     <td className="px-12 py-10 font-black text-slate-900 text-xl">{link.clicks || 0}</td>
+                     <td className="px-12 py-10 text-right flex justify-end space-x-4">
+                       <button onClick={() => handleCopy(`${platformUrl}#/s/${link.shortCode}`, link.id)} className="p-4 text-slate-400 hover:text-indigo-600 bg-white border border-slate-100 rounded-xl shadow-md transition active:scale-90">
+                         {copyStatus[link.id] ? <Check className="w-6 h-6 text-green-500" /> : <LinkIcon className="w-6 h-6" />}
                        </button>
-                       <button onClick={() => deleteLink(link.id)} className="p-3 text-slate-300 hover:text-red-500 bg-white border border-slate-100 rounded-lg shadow-sm transition active:scale-90">
-                         <Trash2 className="w-5 h-5" />
+                       <button onClick={() => deleteLink(link.id)} className="p-4 text-slate-300 hover:text-red-500 bg-white border border-slate-100 rounded-xl shadow-md transition active:scale-90">
+                         <Trash2 className="w-6 h-6" />
                        </button>
                      </td>
                    </tr>

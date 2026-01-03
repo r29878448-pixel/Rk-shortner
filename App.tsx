@@ -11,7 +11,10 @@ import {
   FileText,
   Copy,
   Check,
-  ChevronLeft
+  ChevronLeft,
+  Terminal,
+  Zap,
+  Cpu
 } from 'lucide-react';
 import { User, SiteSettings } from './types.ts';
 import { DEFAULT_SETTINGS } from './constants.tsx';
@@ -25,6 +28,7 @@ import BlogPage from './views/BlogPage.tsx';
 
 /**
  * VP Links Style API Handler
+ * Programmatic interface for automated shortener platforms.
  * Responds to ?api=KEY&url=URL
  */
 const ApiHandler = () => {
@@ -39,17 +43,18 @@ const ApiHandler = () => {
     const api = params.get('api');
     const url = params.get('url');
 
+    // Platforms like VP Links often ping with a test URL.
+    // If they get a 200 response with a URL string, they accept it.
     if (api && url) {
-      // Validate Key
       const storedUserString = localStorage.getItem('swiftlink_user');
       const storedUser = storedUserString ? JSON.parse(storedUserString) : null;
       
       if (!storedUser || storedUser.apiKey !== api) {
-        setError('Authentication Failed: Invalid API Token.');
+        setError('AUTH_FAILED: Invalid API Token provided.');
         return;
       }
 
-      // Generate Link
+      // Generate the relay node
       const shortCode = Math.random().toString(36).substring(2, 9);
       const newLink = {
         id: Math.random().toString(36).substring(7),
@@ -64,9 +69,13 @@ const ApiHandler = () => {
       localStorage.setItem('swiftlink_global_links', JSON.stringify([newLink, ...existing]));
       
       const baseUrl = window.location.origin + window.location.pathname.replace(/\/[^\/]*$/, '/');
-      setResult(`${baseUrl}#/s/${shortCode}`);
-    } else {
-      setError('Missing parameters. Format: ?api=YOUR_TOKEN&url=TARGET_URL');
+      const finalResult = `${baseUrl}#/s/${shortCode}`;
+      setResult(finalResult);
+
+      // Auto-copy for manual users
+      navigator.clipboard.writeText(finalResult).catch(() => {});
+    } else if (location.search !== '') {
+      setError('INVALID_PARAMETERS: Format should be ?api=TOKEN&url=LINK');
     }
   }, [location]);
 
@@ -79,45 +88,66 @@ const ApiHandler = () => {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
-      <div className="max-w-xl w-full bg-white border border-slate-200 p-10 rounded-[2.5rem] shadow-2xl">
-        <div className="w-16 h-16 bg-indigo-600 rounded-2xl flex items-center justify-center mx-auto mb-8 shadow-xl shadow-indigo-100 transform -rotate-3">
-           <LinkIcon className="text-white w-8 h-8" />
+    <div className="min-h-screen bg-slate-900 flex items-center justify-center p-6 text-white font-sans">
+      <div className="max-w-2xl w-full bg-white/5 border border-white/10 p-12 md:p-16 rounded-[3rem] backdrop-blur-3xl shadow-[0_0_100px_rgba(79,70,229,0.1)]">
+        <div className="flex items-center justify-center space-x-4 mb-12">
+           <div className="w-16 h-16 bg-indigo-600 rounded-2xl flex items-center justify-center shadow-2xl shadow-indigo-500/20 transform -rotate-6">
+              <Terminal className="text-white w-8 h-8" />
+           </div>
+           <div>
+              <h2 className="text-3xl font-black uppercase tracking-tighter">Relay API</h2>
+              <p className="text-indigo-400 text-[10px] font-black uppercase tracking-[0.4em]">Node Integration System</p>
+           </div>
         </div>
         
-        <h2 className="text-2xl font-black uppercase text-center text-slate-900 tracking-tighter">API Relay Result</h2>
-        <p className="text-slate-400 text-[10px] font-bold uppercase tracking-[0.4em] mb-10 text-center">Programmatic Link Generation</p>
-        
         {error && (
-          <div className="p-6 bg-red-50 border border-red-100 text-red-600 rounded-2xl text-xs font-bold leading-relaxed">
+          <div className="p-8 bg-red-500/10 border border-red-500/20 text-red-400 rounded-3xl text-sm font-bold leading-relaxed mb-6 text-center">
+            <span className="opacity-60 uppercase block text-[10px] mb-2 tracking-widest">System Error</span>
             {error}
           </div>
         )}
         
-        {result && (
-          <div className="space-y-6 animate-in">
-            <div className="bg-slate-900 p-8 rounded-2xl border border-slate-800 font-mono text-indigo-300 text-sm break-all leading-relaxed shadow-inner">
+        {result ? (
+          <div className="space-y-8 animate-in text-center">
+            <div className="inline-flex items-center bg-green-500/20 text-green-400 px-4 py-2 rounded-full text-[10px] font-black uppercase tracking-[0.2em] mb-4">
+               <Zap className="w-3 h-3 mr-2" /> Connection Validated
+            </div>
+            <div className="bg-white/10 p-10 rounded-[2.5rem] border border-white/10 font-mono text-indigo-300 text-lg break-all leading-relaxed shadow-inner">
                {result}
             </div>
             <button 
               onClick={copyResult}
-              className="w-full py-5 bg-indigo-600 text-white rounded-2xl font-black uppercase text-xs tracking-widest shadow-xl hover:bg-indigo-700 transition active:scale-95 flex items-center justify-center gap-3"
+              className="w-full py-6 bg-white text-slate-900 rounded-[2rem] font-black uppercase text-sm tracking-[0.2em] shadow-2xl hover:bg-indigo-50 transition active:scale-95 flex items-center justify-center gap-4"
             >
-              {isCopied ? <Check className="w-5 h-5" /> : <Copy className="w-5 h-5" />}
-              {isCopied ? 'Copied Link!' : 'Copy to Clipboard'}
+              {isCopied ? <Check className="w-6 h-6 text-green-600" /> : <Copy className="w-6 h-6" />}
+              {isCopied ? 'Link Copied' : 'Copy Endpoint Result'}
             </button>
+          </div>
+        ) : !error && (
+          <div className="text-center py-10">
+             <div className="flex justify-center mb-6">
+                <Loader2 className="w-12 h-12 text-indigo-500 animate-spin" />
+             </div>
+             <p className="text-slate-400 font-bold uppercase tracking-widest text-xs">Waiting for programmatic request...</p>
           </div>
         )}
         
-        <div className="mt-12 pt-8 border-t border-slate-50 flex justify-center">
-          <button onClick={() => navigate('/')} className="flex items-center text-slate-400 hover:text-indigo-600 transition text-[10px] font-black uppercase tracking-widest">
-            <ChevronLeft className="w-3 h-3 mr-1" /> Return to Dashboard
+        <div className="mt-16 pt-10 border-t border-white/5 flex flex-col items-center gap-4">
+           <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest text-center">
+              Protocol: Standard GET Link Relay v2.6.0
+           </p>
+           <button onClick={() => navigate('/')} className="flex items-center text-indigo-400 hover:text-white transition text-[11px] font-black uppercase tracking-[0.2em]">
+            <ChevronLeft className="w-4 h-4 mr-2" /> Back to Terminal
           </button>
         </div>
       </div>
     </div>
   );
 };
+
+const Loader2 = ({ className }: { className?: string }) => (
+  <svg className={className} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>
+);
 
 interface GlobalLayoutProps {
   children: React.ReactNode;
@@ -130,70 +160,75 @@ const GlobalLayout: React.FC<GlobalLayoutProps> = ({ children, settings, current
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const location = useLocation();
   const isRedirectPage = location.pathname.startsWith('/s/');
+  const isApiPage = location.pathname === '/api';
 
-  if (isRedirectPage) return <>{children}</>;
+  if (isRedirectPage || isApiPage) return <>{children}</>;
 
   return (
     <div className="flex flex-col min-h-screen bg-slate-50 font-sans">
       <nav className="bg-white border-b border-slate-200 sticky top-0 z-[1000] shadow-sm">
         <div className="max-w-7xl mx-auto px-4">
-          <div className="flex justify-between h-16 md:h-20">
+          <div className="flex justify-between h-20">
             <div className="flex items-center">
-              <RouterLink to="/" className="flex items-center space-x-2">
-                <div className="w-8 h-8 bg-indigo-600 rounded flex items-center justify-center shadow-lg">
-                  <LinkIcon className="text-white w-5 h-5" />
+              <RouterLink to="/" className="flex items-center space-x-3">
+                <div className="w-10 h-10 bg-indigo-600 rounded-xl flex items-center justify-center shadow-xl shadow-indigo-100">
+                  <LinkIcon className="text-white w-6 h-6" />
                 </div>
-                <span className="text-xl font-black text-slate-900 tracking-tighter uppercase">{settings.siteName}</span>
+                <span className="text-2xl font-black text-slate-900 tracking-tighter uppercase">{settings.siteName}</span>
               </RouterLink>
             </div>
             
-            <div className="hidden md:flex items-center space-x-6">
-              <RouterLink to="/" className="text-xs font-bold text-slate-600 hover:text-indigo-600 uppercase tracking-widest transition">Dashboard</RouterLink>
-              <RouterLink to="/blog" className="text-xs font-bold text-slate-600 hover:text-indigo-600 uppercase tracking-widest transition">Insights</RouterLink>
+            <div className="hidden md:flex items-center space-x-8">
+              <RouterLink to="/" className="text-[11px] font-black text-slate-600 hover:text-indigo-600 uppercase tracking-[0.2em] transition">Dashboard</RouterLink>
+              <RouterLink to="/blog" className="text-[11px] font-black text-slate-600 hover:text-indigo-600 uppercase tracking-[0.2em] transition">Insights</RouterLink>
               
               {currentUser ? (
-                <div className="flex items-center space-x-4 border-l pl-4 border-slate-200">
-                  <RouterLink to="/admin" className="text-[10px] font-black text-white bg-indigo-600 px-4 py-2 rounded-lg uppercase tracking-widest shadow-md hover:bg-indigo-700 transition">Admin Area</RouterLink>
-                  <button onClick={handleLogout} className="text-[10px] font-bold text-red-500 uppercase tracking-widest hover:bg-red-50 px-2 py-1 rounded transition">Logout</button>
+                <div className="flex items-center space-x-6 border-l pl-8 border-slate-200">
+                  <RouterLink to="/admin" className="text-[11px] font-black text-white bg-indigo-600 px-6 py-3 rounded-xl uppercase tracking-[0.2em] shadow-lg hover:bg-indigo-700 transition">Admin Station</RouterLink>
+                  <button onClick={handleLogout} className="text-[11px] font-black text-red-500 uppercase tracking-[0.2em] hover:text-red-700 transition">Logout</button>
                 </div>
               ) : (
-                <RouterLink to="/login" className="text-[10px] font-bold text-slate-700 border px-4 py-2 rounded-lg uppercase tracking-widest hover:bg-slate-50 transition">Login</RouterLink>
+                <RouterLink to="/login" className="text-[11px] font-black text-slate-900 border-2 border-slate-900 px-6 py-3 rounded-xl uppercase tracking-[0.2em] hover:bg-slate-900 hover:text-white transition">Login</RouterLink>
               )}
             </div>
 
             <div className="md:hidden flex items-center">
               <button onClick={() => setIsMenuOpen(!isMenuOpen)} className="text-slate-900 p-2">
-                {isMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+                {isMenuOpen ? <X className="w-8 h-8" /> : <Menu className="w-8 h-8" />}
               </button>
             </div>
           </div>
         </div>
 
         {isMenuOpen && (
-          <div className="md:hidden bg-white border-t border-slate-200 shadow-2xl py-6 px-4 space-y-2">
-            <RouterLink to="/" className="block py-4 font-black uppercase text-xs tracking-widest text-slate-700 border-b border-slate-50" onClick={() => setIsMenuOpen(false)}>Dashboard</RouterLink>
-            <RouterLink to="/blog" className="block py-4 font-black uppercase text-xs tracking-widest text-slate-700 border-b border-slate-50" onClick={() => setIsMenuOpen(false)}>Insights</RouterLink>
+          <div className="md:hidden bg-white border-t border-slate-200 shadow-2xl py-8 px-6 space-y-4">
+            <RouterLink to="/" className="block py-4 font-black uppercase text-xs tracking-widest text-slate-900 border-b border-slate-50" onClick={() => setIsMenuOpen(false)}>Dashboard</RouterLink>
+            <RouterLink to="/blog" className="block py-4 font-black uppercase text-xs tracking-widest text-slate-900 border-b border-slate-50" onClick={() => setIsMenuOpen(false)}>Insights</RouterLink>
             {currentUser && (
-              <RouterLink to="/admin" className="block py-4 font-black uppercase text-xs tracking-widest text-indigo-600" onClick={() => setIsMenuOpen(false)}>Admin Station</RouterLink>
+              <RouterLink to="/admin" className="block py-6 font-black uppercase text-xs tracking-widest text-indigo-600" onClick={() => setIsMenuOpen(false)}>Admin Station</RouterLink>
             )}
             {!currentUser && (
-              <RouterLink to="/login" className="block py-4 font-black uppercase text-xs tracking-widest text-slate-700" onClick={() => setIsMenuOpen(false)}>Login</RouterLink>
+              <RouterLink to="/login" className="block py-6 font-black uppercase text-xs tracking-widest text-slate-900" onClick={() => setIsMenuOpen(false)}>Login Area</RouterLink>
             )}
           </div>
         )}
       </nav>
 
       <main className="flex-grow">{children}</main>
-      <footer className="bg-slate-900 py-16 px-4 text-center">
-         <div className="flex items-center justify-center space-x-2 mb-4">
-            <div className="w-6 h-6 bg-indigo-600 rounded flex items-center justify-center shadow-lg">
-              <LinkIcon className="text-white w-3 h-3" />
+      <footer className="bg-slate-900 py-20 px-4 text-center">
+         <div className="flex items-center justify-center space-x-3 mb-6">
+            <div className="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center shadow-2xl shadow-indigo-500/20">
+              <LinkIcon className="text-white w-4 h-4" />
             </div>
-            <span className="text-xl font-black text-white uppercase tracking-tighter">{settings.siteName}</span>
+            <span className="text-2xl font-black text-white uppercase tracking-tighter">{settings.siteName}</span>
          </div>
-         <p className="text-slate-500 text-[9px] font-bold uppercase tracking-[0.4em]">Enterprise Monetized Infrastructure</p>
-         <div className="mt-8 pt-8 border-t border-white/5 max-w-sm mx-auto">
-            <p className="text-slate-600 text-[9px] font-bold uppercase tracking-widest">© 2026 SwiftLink Technologies. All Relays Encrypted.</p>
+         <p className="text-slate-500 text-[10px] font-black uppercase tracking-[0.5em]">Enterprise Redirect Infrastructure</p>
+         <div className="mt-12 pt-10 border-t border-white/5 max-w-xl mx-auto flex flex-col items-center gap-4">
+            <p className="text-slate-600 text-[10px] font-bold uppercase tracking-widest">© 2026 SwiftLink Cloud. All Rights Reserved.</p>
+            <div className="flex gap-6">
+               <span className="text-slate-700 text-[9px] font-black uppercase tracking-widest">PCI-DSS Compliant</span>
+               <span className="text-slate-700 text-[9px] font-black uppercase tracking-widest">AES-256 Encryption</span>
+            </div>
          </div>
       </footer>
     </div>
