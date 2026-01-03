@@ -32,6 +32,7 @@ export interface Link {
 }
 
 export interface SiteSettings {
+  siteName: string; // New: Customizable branding
   adsEnabled: boolean;
   captchaEnabled: boolean;
   captchaSiteKey: string;
@@ -41,9 +42,9 @@ export interface SiteSettings {
     middle: string;
     bottom: string;
   };
-  stepAds: string[]; // Array of 5 ad codes for each step
-  redirectDelay: number; // in seconds
-  totalSteps: number; // New: configurable step count
+  stepAds: string[]; 
+  redirectDelay: number; 
+  totalSteps: number; 
 }
 
 export interface BlogPost {
@@ -53,4 +54,5 @@ export interface BlogPost {
   content: string;
   author: string;
   date: string;
+  imageUrl: string; // Added image support
 }

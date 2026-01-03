@@ -52,7 +52,7 @@ const App: React.FC = () => {
                 <div className="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center shadow-lg">
                   <LinkIcon className="text-white w-5 h-5" />
                 </div>
-                <span className="text-xl font-bold text-slate-900 tracking-tight">SwiftLink</span>
+                <span className="text-xl font-bold text-slate-900 tracking-tight">{settings.siteName}</span>
               </RouterLink>
               
               <div className="hidden md:ml-10 md:flex md:space-x-8">
@@ -115,9 +115,12 @@ const App: React.FC = () => {
   };
 
   const Footer = () => (
-    <footer className="bg-slate-900 text-white py-8 border-t border-slate-800 mt-auto">
-      <div className="max-w-7xl mx-auto px-4 text-center text-slate-500 text-xs">
-        © {new Date().getFullYear()} SwiftLink Master Platform. Professional Edition.
+    <footer className="bg-slate-900 text-white py-12 border-t border-slate-800 mt-auto">
+      <div className="max-w-7xl mx-auto px-4 text-center">
+        <p className="text-slate-400 text-sm mb-2">{settings.siteName} Premium URL Infrastructure</p>
+        <div className="text-slate-600 text-[10px] uppercase tracking-[0.3em]">
+          © {new Date().getFullYear()} All Rights Reserved
+        </div>
       </div>
     </footer>
   );
@@ -128,7 +131,7 @@ const App: React.FC = () => {
         <Navigation />
         <main className="flex-grow">
           <Routes>
-            <Route path="/" element={<HomePage />} />
+            <Route path="/" element={<HomePage siteName={settings.siteName} />} />
             <Route path="/login" element={<LoginPage onAuth={setCurrentUser} />} />
             <Route path="/blog" element={<BlogPage />} />
             <Route path="/admin" element={<AdminDashboard user={currentUser} settings={settings} onUpdateSettings={setSettings} />} />

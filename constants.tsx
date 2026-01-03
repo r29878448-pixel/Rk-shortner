@@ -1,25 +1,26 @@
 
-import { SiteSettings, SubscriptionPlan } from './types';
+import { SiteSettings, SubscriptionPlan } from './types.ts';
 
 export const DEFAULT_SETTINGS: SiteSettings = {
+  siteName: 'SwiftLink',
   adsEnabled: true,
   captchaEnabled: true,
-  captchaSiteKey: '6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI', // Demo key
+  captchaSiteKey: '6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI', 
   captchaSecretKey: 'demo-secret',
   adSlots: {
-    top: '<div class="bg-indigo-50 h-24 flex flex-col items-center justify-center border border-dashed border-indigo-200 text-indigo-400 text-xs font-black rounded-xl"><span>GLOBAL TOP AD UNIT</span></div>',
-    middle: '<div class="bg-indigo-50 h-64 flex flex-col items-center justify-center border border-dashed border-indigo-200 text-indigo-400 text-xs font-black rounded-xl"><span>GLOBAL MIDDLE AD UNIT</span></div>',
-    bottom: '<div class="bg-indigo-50 h-24 flex flex-col items-center justify-center border border-dashed border-indigo-200 text-indigo-400 text-xs font-black rounded-xl"><span>GLOBAL BOTTOM AD UNIT</span></div>'
+    top: '<div class="bg-indigo-50 h-24 flex flex-col items-center justify-center border border-dashed border-indigo-200 text-indigo-400 text-xs font-black rounded-xl"><span>728x90 Leaderboard Ad</span></div>',
+    middle: '<div class="bg-indigo-50 h-64 flex flex-col items-center justify-center border border-dashed border-indigo-200 text-indigo-400 text-xs font-black rounded-xl"><span>300x600 Display Ad</span></div>',
+    bottom: '<div class="bg-indigo-50 h-24 flex flex-col items-center justify-center border border-dashed border-indigo-200 text-indigo-400 text-xs font-black rounded-xl"><span>Sticky Footer Ad</span></div>'
   },
   stepAds: [
-    '<div class="p-4 bg-slate-100 rounded-xl text-center font-bold text-slate-400">STEP 1: PREMIUM AD CONTENT</div>',
-    '<div class="p-4 bg-slate-100 rounded-xl text-center font-bold text-slate-400">STEP 2: PREMIUM AD CONTENT</div>',
-    '<div class="p-4 bg-slate-100 rounded-xl text-center font-bold text-slate-400">STEP 3: PREMIUM AD CONTENT</div>',
-    '<div class="p-4 bg-slate-100 rounded-xl text-center font-bold text-slate-400">STEP 4: PREMIUM AD CONTENT</div>',
-    '<div class="p-4 bg-slate-100 rounded-xl text-center font-bold text-slate-400">STEP 5: PREMIUM AD CONTENT</div>'
+    '<div class="p-4 bg-slate-100 rounded-xl text-center font-bold text-slate-400">ADS SLOT 1</div>',
+    '<div class="p-4 bg-slate-100 rounded-xl text-center font-bold text-slate-400">ADS SLOT 2</div>',
+    '<div class="p-4 bg-slate-100 rounded-xl text-center font-bold text-slate-400">ADS SLOT 3</div>',
+    '<div class="p-4 bg-slate-100 rounded-xl text-center font-bold text-slate-400">ADS SLOT 4</div>',
+    '<div class="p-4 bg-slate-100 rounded-xl text-center font-bold text-slate-400">ADS SLOT 5</div>'
   ],
   redirectDelay: 15,
-  totalSteps: 5
+  totalSteps: 3
 };
 
 export const PLAN_LIMITS = {
@@ -38,7 +39,7 @@ export const PLAN_LIMITS = {
     price: 19
   },
   [SubscriptionPlan.BUSINESS]: {
-    linksPerMonth: -1, // Unlimited
+    linksPerMonth: -1, 
     apiRequestsPerMonth: 100000,
     customAlias: true,
     stepsCount: 1,

@@ -3,7 +3,11 @@ import React, { useState } from 'react';
 import { ChevronRight, Copy, Check, ExternalLink, Loader2, Zap, Shield } from 'lucide-react';
 import { Link as LinkType } from '../types.ts';
 
-const HomePage: React.FC = () => {
+interface HomePageProps {
+  siteName: string;
+}
+
+const HomePage: React.FC<HomePageProps> = ({ siteName }) => {
   const [url, setUrl] = useState('');
   const [shortenedLink, setShortenedLink] = useState<LinkType | null>(null);
   const [isCopied, setIsCopied] = useState(false);
@@ -48,26 +52,26 @@ const HomePage: React.FC = () => {
 
   return (
     <div className="bg-white min-h-[90vh]">
-      <section className="relative pt-24 pb-32">
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-[500px] bg-slate-50 -z-10 rounded-b-[120px]"></div>
+      <section className="relative pt-24 pb-32 overflow-hidden">
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[140%] h-[600px] bg-slate-50 -z-10 rounded-[200px] rotate-[-2deg]"></div>
         <div className="max-w-4xl mx-auto px-4 text-center">
-          <div className="inline-flex items-center px-4 py-1.5 rounded-full bg-indigo-50 text-indigo-700 text-xs font-bold mb-8 uppercase tracking-widest border border-indigo-100">
-            Professional Link Shortener
+          <div className="inline-flex items-center px-4 py-1.5 rounded-full bg-indigo-50 text-indigo-700 text-[10px] font-black mb-8 uppercase tracking-[0.2em] border border-indigo-100">
+            Professional Monetization Platform
           </div>
-          <h1 className="text-5xl md:text-7xl font-black text-slate-900 tracking-tight mb-8">
-            Shorten Your Links <br />
-            <span className="text-indigo-600">Secure. Fast. Simple.</span>
+          <h1 className="text-6xl md:text-8xl font-black text-slate-900 tracking-tighter mb-8 leading-[0.9]">
+            Shorten. <br />
+            <span className="text-indigo-600">Secure. Earn.</span>
           </h1>
-          <p className="text-lg text-slate-500 max-w-xl mx-auto mb-14 leading-relaxed">
-            Create professional short links with multi-step security verification. Ideal for monetizing your traffic.
+          <p className="text-xl text-slate-500 max-w-xl mx-auto mb-14 leading-relaxed font-medium">
+            The most advanced multi-step link infrastructure for professional creators. Powered by {siteName}.
           </p>
 
-          <div className="bg-white p-3 rounded-[2.5rem] shadow-2xl border border-slate-100 mb-10">
+          <div className="bg-white p-3 rounded-[3rem] shadow-2xl shadow-indigo-100 border border-slate-100 mb-10 relative group">
             <form onSubmit={handleShorten} className="flex flex-col md:flex-row gap-3">
               <input 
                 type="url" 
-                placeholder="https://paste-your-long-link-here.com" 
-                className="flex-grow px-8 py-5 rounded-2xl text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-lg bg-slate-50/50"
+                placeholder="Paste your long destination link..." 
+                className="flex-grow px-8 py-6 rounded-[2.5rem] text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-lg bg-slate-50/50 font-medium"
                 value={url}
                 onChange={(e) => setUrl(e.target.value)}
                 required
@@ -75,43 +79,44 @@ const HomePage: React.FC = () => {
               <button 
                 type="submit"
                 disabled={isLoading}
-                className="bg-indigo-600 text-white px-12 py-5 rounded-2xl font-bold text-xl hover:bg-indigo-700 transition flex items-center justify-center disabled:opacity-50"
+                className="bg-indigo-600 text-white px-12 py-6 rounded-[2.5rem] font-black text-xl hover:bg-indigo-700 transition flex items-center justify-center disabled:opacity-50 shadow-xl shadow-indigo-200"
               >
-                {isLoading ? <Loader2 className="animate-spin w-6 h-6" /> : 'Shorten Now'} <ChevronRight className="ml-2 w-6 h-6" />
+                {isLoading ? <Loader2 className="animate-spin w-7 h-7" /> : 'Shorten'} <ChevronRight className="ml-2 w-7 h-7" />
               </button>
             </form>
           </div>
 
           {shortenedLink && (
-            <div className="bg-slate-900 rounded-[2rem] p-10 text-white shadow-2xl">
-              <div className="flex flex-col md:flex-row items-center justify-between gap-8">
+            <div className="bg-slate-900 rounded-[3rem] p-12 text-white shadow-2xl relative overflow-hidden group">
+              <div className="flex flex-col md:flex-row items-center justify-between gap-8 relative z-10">
                 <div className="text-left w-full overflow-hidden">
-                  <p className="text-indigo-400 text-sm font-bold uppercase tracking-widest mb-2">Short Link Ready:</p>
-                  <div className="text-xl md:text-2xl font-black truncate bg-white/10 p-3 rounded-xl border border-white/20 font-mono">
+                  <p className="text-indigo-400 text-xs font-black uppercase tracking-[0.3em] mb-4">Secure Path Generated</p>
+                  <div className="text-xl md:text-3xl font-black truncate bg-white/5 p-5 rounded-2xl border border-white/10 font-mono text-indigo-100">
                     {getBaseUrl()}#/s/{shortenedLink.shortCode}
                   </div>
                 </div>
                 <div className="flex gap-3 w-full md:w-auto shrink-0">
                   <button 
                     onClick={copyToClipboard}
-                    className="flex-grow md:flex-initial flex items-center justify-center space-x-2 bg-white text-slate-900 px-8 py-5 rounded-2xl font-bold hover:bg-slate-100 transition shadow-xl"
+                    className="flex-grow md:flex-initial flex items-center justify-center space-x-3 bg-white text-slate-900 px-10 py-6 rounded-2xl font-black text-xl hover:scale-105 transition shadow-2xl shadow-indigo-900/40"
                   >
-                    {isCopied ? <Check className="w-6 h-6 text-green-500" /> : <Copy className="w-6 h-6" />}
+                    {isCopied ? <Check className="w-7 h-7 text-green-500" /> : <Copy className="w-7 h-7" />}
                     <span>{isCopied ? 'Copied' : 'Copy'}</span>
                   </button>
                 </div>
               </div>
+              <div className="absolute top-0 right-0 w-64 h-64 gradient-bg blur-[100px] opacity-20 -mr-32 -mt-32"></div>
             </div>
           )}
 
-          <div className="mt-16 flex flex-wrap justify-center gap-10 text-slate-400 font-bold text-sm">
-            <div className="flex items-center space-x-3">
-              <Shield className="w-4 h-4 text-indigo-500" />
-              <span>Secure Redirects</span>
+          <div className="mt-20 flex flex-wrap justify-center gap-12 text-slate-400 font-black text-[10px] uppercase tracking-[0.3em]">
+            <div className="flex items-center space-x-4">
+              <Shield className="w-5 h-5 text-indigo-500" />
+              <span>Enterprise Redirects</span>
             </div>
-            <div className="flex items-center space-x-3">
-              <Zap className="w-4 h-4 text-indigo-500" />
-              <span>Instant Setup</span>
+            <div className="flex items-center space-x-4">
+              <Zap className="w-5 h-5 text-indigo-500" />
+              <span>Instant Monetization</span>
             </div>
           </div>
         </div>
