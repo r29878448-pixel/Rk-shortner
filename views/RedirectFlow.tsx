@@ -8,8 +8,9 @@ import {
   ChevronDown,
   Lock,
   Unlock,
-  Megaphone,
-  ArrowRight
+  ArrowRight,
+  ShieldAlert,
+  Layers
 } from 'lucide-react';
 import { SiteSettings, ClickEvent, Link, User, UserRole, BlogPost } from '../types.ts';
 import { DEMO_POSTS, DEFAULT_SETTINGS } from '../constants.tsx';
@@ -24,6 +25,7 @@ type FlowState = 'idle' | 'counting' | 'verifying' | 'ready';
 
 const RedirectFlow: React.FC<RedirectFlowProps> = ({ settings, currentUser }) => {
   const { shortCode } = useParams();
+  const [currentStep, setCurrentStep] = useState(1);
   const [flowState, setFlowState] = useState<FlowState>('idle');
   const [progress, setProgress] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -34,13 +36,15 @@ const RedirectFlow: React.FC<RedirectFlowProps> = ({ settings, currentUser }) =>
   
   const bottomRef = useRef<HTMLDivElement>(null);
   const activeSettings: SiteSettings = JSON.parse(localStorage.getItem('swiftlink_settings') || JSON.stringify(DEFAULT_SETTINGS));
+  const totalSteps = activeSettings.totalSteps || 1;
   const isAdmin = currentUser?.role === UserRole.ADMIN;
 
-  // Use the shortCode to deterministically select a blog post so it stays consistent for a specific link
+  // Dynamically select a post based on shortCode AND current step to vary content
   const post: BlogPost = useMemo(() => {
-    const index = (shortCode || '').split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+    const seed = (shortCode || '') + currentStep;
+    const index = seed.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
     return DEMO_POSTS[index % DEMO_POSTS.length];
-  }, [shortCode]);
+  }, [shortCode, currentStep]);
 
   useEffect(() => {
     const storedLinks = JSON.parse(localStorage.getItem('swiftlink_global_links') || '[]');
@@ -50,26 +54,35 @@ const RedirectFlow: React.FC<RedirectFlowProps> = ({ settings, currentUser }) =>
       setTargetUrl(link.originalUrl);
       setLinkId(link.id);
       setOwnerId(link.userId);
-      setTimeout(() => {
-        setLoading(false);
-        setFlowState('counting');
-      }, 1500);
+      resetStepFlow();
     } else {
-      setError('System Invalid Session.');
+      setError('SESSION_EXPIRED: The requested link node is no longer available.');
     }
   }, [shortCode]);
 
+  const resetStepFlow = () => {
+    setLoading(true);
+    setFlowState('idle');
+    setProgress(0);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    
+    setTimeout(() => {
+      setLoading(false);
+      setFlowState('counting');
+    }, 1000);
+  };
+
   useEffect(() => {
     if (flowState === 'counting') {
-      const duration = 15000; // 15 seconds
+      const duration = activeSettings.redirectDelay * 1000; 
       const interval = 100;
       const steps = duration / interval;
-      let currentStep = 0;
+      let currentProgressStep = 0;
 
       const timer = setInterval(() => {
-        currentStep++;
-        setProgress((currentStep / steps) * 100);
-        if (currentStep >= steps) {
+        currentProgressStep++;
+        setProgress((currentProgressStep / steps) * 100);
+        if (currentProgressStep >= steps) {
           clearInterval(timer);
           setFlowState('verifying');
         }
@@ -77,17 +90,25 @@ const RedirectFlow: React.FC<RedirectFlowProps> = ({ settings, currentUser }) =>
 
       return () => clearInterval(timer);
     }
-  }, [flowState]);
+  }, [flowState, activeSettings.redirectDelay]);
 
   const handleVerify = () => {
     setFlowState('ready');
-    // Gently pulse the page to signal unlock
     setTimeout(() => {
-       window.scrollBy({ top: 300, behavior: 'smooth' });
+       window.scrollBy({ top: 400, behavior: 'smooth' });
     }, 100);
   };
 
-  const handleLogClick = () => {
+  const handleNextStep = () => {
+    if (currentStep < totalSteps) {
+      setCurrentStep(prev => prev + 1);
+      resetStepFlow();
+    } else {
+      handleFinalRedirect();
+    }
+  };
+
+  const handleFinalRedirect = () => {
     const clickEvent: ClickEvent = {
       id: Math.random().toString(36).substring(7),
       linkId, 
@@ -111,169 +132,163 @@ const RedirectFlow: React.FC<RedirectFlowProps> = ({ settings, currentUser }) =>
       return l;
     });
     localStorage.setItem('swiftlink_global_links', JSON.stringify(updatedLinks));
+
+    window.location.href = targetUrl;
   };
 
   if (loading) return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-white p-10">
-      <Loader2 className="w-12 h-12 text-indigo-600 animate-spin mb-6" />
-      <p className="text-[10px] font-black uppercase tracking-[0.4em] text-slate-400">Verifying Connection Port</p>
+      <Loader2 className="w-12 h-12 text-indigo-600 animate-spin mb-8" />
+      <div className="text-center">
+         <p className="text-[11px] font-black uppercase tracking-[0.4em] text-slate-400 mb-2">
+           {currentStep > 1 ? `Initializing Verification Step ${currentStep}` : 'Resolving Network Port'}
+         </p>
+         <p className="text-[9px] font-bold text-slate-300 uppercase">Awaiting handshake...</p>
+      </div>
     </div>
   );
 
   if (error) return (
-    <div className="min-h-screen flex items-center justify-center bg-slate-50 p-6 text-center">
-      <div className="bg-white p-12 rounded-3xl border border-slate-100 shadow-xl max-w-sm">
-        <AlertCircle className="w-12 h-12 text-red-500 mx-auto mb-6" />
-        <h2 className="text-xl font-black mb-4 uppercase">Node Error</h2>
-        <p className="text-xs text-slate-400 font-bold mb-8">{error}</p>
-        <a href="/#/" className="block py-4 bg-slate-900 text-white rounded-xl font-bold uppercase text-[10px] tracking-widest">Back to Hub</a>
+    <div className="min-h-screen flex items-center justify-center bg-slate-900 p-6 text-center">
+      <div className="bg-white/5 border border-white/10 p-16 rounded-[3rem] max-w-md backdrop-blur-3xl shadow-2xl">
+        <ShieldAlert className="w-16 h-16 text-red-500 mx-auto mb-8" />
+        <h2 className="text-2xl font-black mb-4 uppercase text-white tracking-tighter">Access Denied</h2>
+        <p className="text-xs text-slate-400 font-bold mb-10 leading-relaxed uppercase tracking-widest">{error}</p>
+        <a href="/#/" className="block py-5 bg-white text-slate-900 rounded-2xl font-black uppercase text-[10px] tracking-widest active:scale-95 transition">Return to Hub</a>
       </div>
     </div>
   );
 
   return (
     <div className="min-h-screen bg-white text-slate-900 font-sans pb-40">
-      {!isAdmin && <AdSlot html={settings.adSlots.top} />}
+      {!isAdmin && <AdSlot html={settings.adSlots.top} className="bg-slate-50 border-b border-slate-100" />}
       
-      <div className="sticky top-0 z-[100] w-full bg-slate-900 text-white border-b border-white/10 px-6 py-4 flex justify-between items-center shadow-xl">
-        <div className="flex items-center space-x-2 text-indigo-400">
-          <ShieldCheck className="w-4 h-4" />
-          <span className="text-[9px] font-black uppercase tracking-widest">Security Protocol Active</span>
+      <div className="sticky top-0 z-[100] w-full bg-slate-900 text-white border-b border-white/10 px-8 py-5 flex justify-between items-center shadow-[0_20px_40px_-15px_rgba(0,0,0,0.3)] backdrop-blur-xl bg-slate-900/90">
+        <div className="flex items-center space-x-3 text-indigo-400">
+          <ShieldCheck className="w-5 h-5" />
+          <span className="text-[10px] font-black uppercase tracking-[0.3em]">Protocol Phase: {currentStep} / {totalSteps}</span>
         </div>
-        <div className="flex items-center space-x-4">
-          <span className="text-[10px] font-black uppercase tracking-widest text-white/40">Status:</span>
-          <span className="text-xs font-black uppercase tracking-widest text-indigo-400">
-            {flowState === 'counting' ? 'Securing Connection...' : flowState === 'verifying' ? 'Identity Verification' : 'Gateway Open'}
+        <div className="flex items-center space-x-5">
+          <span className="text-[11px] font-black uppercase tracking-[0.2em] text-white/30 hidden sm:inline">Network Status:</span>
+          <span className="text-[11px] font-black uppercase tracking-[0.2em] text-indigo-400 bg-indigo-500/10 px-4 py-2 rounded-lg border border-indigo-500/20">
+            {flowState === 'counting' ? 'Securing Phase' : flowState === 'verifying' ? 'Verifying Identity' : 'Step Authorized'}
           </span>
         </div>
       </div>
 
-      <div className="max-w-4xl mx-auto p-6 md:p-14">
+      <div className="max-w-4xl mx-auto px-6 md:px-14 pt-16">
         <div className="text-center mb-16">
-          <h1 className="text-4xl md:text-6xl font-black mb-6 tracking-tighter uppercase leading-tight">{post.title}</h1>
-          <div className="flex items-center justify-center space-x-4 text-[10px] font-black uppercase tracking-widest text-slate-400">
-             <span>By {post.author}</span>
-             <span className="w-1 h-1 bg-slate-300 rounded-full"></span>
-             <span>{post.date}</span>
+          <h1 className="text-4xl md:text-7xl font-black mb-8 tracking-tighter uppercase leading-[0.9] text-balance">{post.title}</h1>
+          <div className="flex items-center justify-center space-x-5 text-[10px] font-black uppercase tracking-[0.3em] text-slate-400 bg-slate-50 inline-flex mx-auto px-6 py-3 rounded-xl border border-slate-100">
+             <span>Pub: {post.author}</span>
+             <span className="w-1.5 h-1.5 bg-indigo-500 rounded-full animate-pulse"></span>
+             <span>Ref: {post.date}</span>
           </div>
         </div>
 
-        {/* INTERACTION AREA */}
-        <div className="bg-slate-900 border-2 border-indigo-500/20 rounded-[2.5rem] p-10 md:p-16 mb-20 text-center shadow-2xl relative overflow-hidden">
+        {/* INTERACTION CONSOLE */}
+        <div className="bg-slate-900 border-2 border-indigo-500/20 rounded-[3rem] p-10 md:p-20 mb-20 text-center shadow-2xl relative overflow-hidden group">
+           <div className="absolute inset-0 bg-gradient-to-br from-indigo-600/10 to-transparent pointer-events-none"></div>
+           
            {flowState === 'counting' && (
-             <div className="animate-in space-y-6">
-               <div className="flex justify-center mb-8">
-                  <div className="p-6 bg-white/5 rounded-3xl border border-white/10">
-                     <Lock className="w-10 h-10 text-indigo-400" />
+             <div className="animate-in space-y-10 relative z-10">
+               <div className="flex justify-center">
+                  <div className="p-8 bg-white/5 rounded-[2.5rem] border border-white/10 shadow-2xl">
+                     <Lock className="w-12 h-12 text-indigo-400" />
                   </div>
                </div>
-               <h3 className="text-2xl font-black uppercase tracking-tight text-white">Authenticating User Identity</h3>
-               <p className="text-[10px] text-slate-400 font-black uppercase tracking-[0.3em]">Please stay on this page for 15 seconds</p>
-               
-               {/* Progress Bar instead of Countdown */}
-               <div className="max-w-xs mx-auto h-2 bg-white/5 rounded-full mt-10 overflow-hidden">
-                  <div 
-                    className="h-full bg-indigo-500 transition-all duration-300 ease-linear shadow-[0_0_15px_rgba(99,102,241,0.5)]" 
-                    style={{ width: `${progress}%` }}
-                  />
+               <div>
+                  <h3 className="text-2xl font-black uppercase tracking-tight text-white mb-4">Establishing Verification Phase</h3>
+                  <p className="text-[11px] text-slate-500 font-black uppercase tracking-[0.4em] mb-12">Authorization required. Please wait...</p>
+                  
+                  <div className="max-w-md mx-auto h-3 bg-white/5 rounded-full overflow-hidden border border-white/5 shadow-inner">
+                    <div 
+                      className="h-full bg-indigo-500 transition-all duration-300 ease-linear shadow-[0_0_30px_rgba(99,102,241,0.6)]" 
+                      style={{ width: `${progress}%` }}
+                    />
+                  </div>
                </div>
              </div>
            )}
 
            {flowState === 'verifying' && (
-             <div className="animate-in space-y-8">
+             <div className="animate-in space-y-10 relative z-10">
                 <div className="flex justify-center">
-                  <div className="p-6 bg-green-500/10 rounded-3xl border border-green-500/20 animate-pulse">
-                     <ShieldCheck className="w-12 h-12 text-green-500" />
+                  <div className="p-8 bg-green-500/10 rounded-[2.5rem] border border-green-500/20 animate-pulse">
+                     <ShieldCheck className="w-14 h-14 text-green-500" />
                   </div>
                 </div>
-                <h3 className="text-2xl font-black uppercase tracking-tight text-white">Threshold Reached</h3>
+                <h3 className="text-2xl font-black uppercase tracking-tight text-white">Security Threshold Met</h3>
                 <button 
                   onClick={handleVerify} 
-                  className="w-full max-w-sm py-6 bg-indigo-600 text-white rounded-2xl font-black uppercase text-xs tracking-[0.2em] shadow-2xl hover:bg-indigo-700 transition active:scale-95 flex items-center justify-center mx-auto"
+                  className="w-full max-w-sm py-8 bg-indigo-600 text-white rounded-[2rem] font-black uppercase text-sm tracking-[0.25em] shadow-[0_30px_60px_-15px_rgba(79,70,229,0.5)] hover:bg-indigo-700 transition-all active:scale-95 flex items-center justify-center mx-auto"
                 >
-                  <Unlock className="w-4 h-4 mr-3" /> Verify & Unlock Link
+                  <Unlock className="w-5 h-5 mr-4" /> Verify Step {currentStep}
                 </button>
              </div>
            )}
 
            {flowState === 'ready' && (
-             <div className="animate-in space-y-4">
-                <div className="w-20 h-20 bg-green-500/10 rounded-3xl mx-auto flex items-center justify-center text-green-500 mb-6 border border-green-500/20"><Unlock className="w-10 h-10" /></div>
-                <h3 className="text-2xl font-black uppercase tracking-tight text-green-400">Gateway Authorized</h3>
-                <div className="flex flex-col items-center text-indigo-400">
-                  <p className="text-[10px] font-black uppercase tracking-widest mb-4">Scroll down to continue</p>
-                  <ChevronDown className="w-10 h-10 animate-bounce" />
+             <div className="animate-in space-y-8 relative z-10">
+                <div className="w-24 h-24 bg-green-500/10 rounded-[2.5rem] mx-auto flex items-center justify-center text-green-500 border border-green-500/20 shadow-xl shadow-green-500/5">
+                   <Unlock className="w-12 h-12" />
+                </div>
+                <h3 className="text-2xl font-black uppercase tracking-tight text-green-400">Step {currentStep} Authorized</h3>
+                <div className="flex flex-col items-center text-indigo-400 space-y-4">
+                  <p className="text-[11px] font-black uppercase tracking-[0.4em] opacity-60">Continue button located below</p>
+                  <ChevronDown className="w-12 h-12 animate-bounce" />
                 </div>
              </div>
            )}
         </div>
 
-        {/* LONG FORM CONTENT FOR AD SLOTS */}
-        <div className="prose prose-lg max-w-none text-slate-600 text-justify space-y-12 leading-relaxed">
-          <p className="text-xl font-bold text-slate-900 border-l-4 border-indigo-500 pl-6 italic">
-            "The architecture of modern link relays is not just about redirection; it is about certifying the digital handshake between publisher and visitor."
+        {!isAdmin && <AdSlot html={settings.adSlots.middle} className="mb-20" />}
+
+        <div className="prose prose-2xl max-w-none text-slate-700 text-justify space-y-16 leading-[1.6]">
+          <p className="text-2xl font-black text-slate-900 border-l-[12px] border-indigo-600 pl-10 italic py-4 bg-slate-50 rounded-r-3xl uppercase tracking-tighter">
+            "Verification Step {currentStep}: Processing network telemetry and user authentication."
           </p>
 
-          <div className="bg-slate-50 p-8 md:p-12 rounded-[2rem] border border-slate-200">
-             <h4 className="text-xl font-black uppercase tracking-tighter mb-4 text-slate-900">Summary Analysis</h4>
-             <p className="text-base text-slate-500 font-medium">
-               {post.excerpt}
-             </p>
-          </div>
-
-          <div className="whitespace-pre-line text-lg font-medium opacity-80">
+          <div className="whitespace-pre-line text-lg md:text-xl font-medium text-slate-500 leading-relaxed">
             {post.content}
           </div>
         </div>
 
-        {/* THE FINAL GATEWAY - HIDDEN UNLESS READY */}
-        <div className="mt-32 pt-32 border-t-4 border-slate-900 text-center" ref={bottomRef}>
+        <div className="mt-40 pt-40 border-t-[8px] border-slate-900 text-center" ref={bottomRef}>
           {flowState === 'ready' ? (
-            <div className="animate-in space-y-12">
+            <div className="animate-in space-y-16">
               
-              {/* Buy Ad Above Button */}
-              <div className="max-w-md mx-auto">
-                 <a href={settings.telegramBotUrl} target="_blank" className="flex items-center justify-center p-6 bg-slate-50 border-2 border-dashed border-slate-200 rounded-2xl text-slate-400 hover:text-indigo-600 hover:border-indigo-300 transition group">
-                   <Megaphone className="w-5 h-5 mr-3 group-hover:rotate-12 transition-transform" />
-                   <span className="text-[10px] font-black uppercase tracking-widest">Advertise Here (Top Slot)</span>
-                 </a>
+              <div className="space-y-8">
+                 <h2 className="text-6xl md:text-9xl font-black text-slate-900 tracking-tighter uppercase leading-[0.8] text-balance">
+                    {currentStep < totalSteps ? `Step ${currentStep} Done` : 'Final Gateway'}
+                 </h2>
+                 <p className="text-[12px] font-black uppercase tracking-[0.6em] text-slate-300">Phase Authorization Verified</p>
               </div>
 
-              <div className="space-y-6">
-                 <h2 className="text-5xl md:text-7xl font-black text-slate-900 tracking-tighter uppercase leading-none">Access <br/> Granted</h2>
-                 <p className="text-[10px] font-black uppercase tracking-[0.5em] text-slate-400">Port {shortCode} is now active</p>
-              </div>
-
-              <a 
-                href={targetUrl} 
-                onClick={handleLogClick} 
-                className="inline-flex w-full max-w-lg py-10 bg-indigo-600 text-white rounded-[2.5rem] font-black text-3xl uppercase tracking-tighter shadow-2xl hover:bg-indigo-700 transition-all active:scale-95 items-center justify-center group"
-              >
-                Continue to Link <ArrowRight className="ml-4 w-8 h-8 group-hover:translate-x-2 transition-transform" />
-              </a>
-
-              {/* Buy Ad Below Button */}
-              <div className="max-w-md mx-auto">
-                 <a href={settings.telegramBotUrl} target="_blank" className="flex items-center justify-center p-6 bg-slate-900 border-2 border-dashed border-white/10 rounded-2xl text-white/30 hover:text-indigo-400 hover:border-indigo-500 transition group">
-                   <Megaphone className="w-5 h-5 mr-3 group-hover:rotate-12 transition-transform" />
-                   <span className="text-[10px] font-black uppercase tracking-widest">Advertise Here (Bottom Slot)</span>
-                 </a>
+              <div className="relative inline-block w-full max-w-xl group">
+                 <div className="absolute inset-0 bg-indigo-600 blur-[40px] opacity-20 group-hover:opacity-40 transition-opacity"></div>
+                 <button 
+                   onClick={handleNextStep} 
+                   className="relative flex w-full py-12 bg-indigo-600 text-white rounded-[3rem] font-black text-3xl md:text-4xl uppercase tracking-tighter shadow-2xl hover:bg-indigo-700 transition-all active:scale-95 items-center justify-center group"
+                 >
+                   {currentStep < totalSteps ? `Continue to Step ${currentStep + 1}` : 'Continue to Link'} 
+                   <ArrowRight className="ml-6 w-10 h-10 group-hover:translate-x-3 transition-transform" />
+                 </button>
               </div>
 
             </div>
           ) : (
-            <div className="opacity-10 flex flex-col items-center select-none grayscale pointer-events-none">
-               <div className="w-20 h-20 bg-slate-200 rounded-3xl mb-10"></div>
-               <div className="h-10 w-80 bg-slate-200 rounded-2xl mb-6"></div>
-               <div className="h-24 w-full max-w-lg bg-slate-300 rounded-[2.5rem]"></div>
-               <p className="mt-10 text-[11px] font-black uppercase tracking-[0.3em] text-slate-400">Security check required to reveal gateway</p>
+            <div className="opacity-5 flex flex-col items-center select-none grayscale pointer-events-none scale-90">
+               <div className="w-24 h-24 bg-slate-300 rounded-[2.5rem] mb-12"></div>
+               <div className="h-12 w-full max-w-md bg-slate-300 rounded-2xl mb-8"></div>
+               <div className="h-32 w-full max-w-xl bg-slate-400 rounded-[3rem]"></div>
+               <p className="mt-12 text-[12px] font-black uppercase tracking-[0.5em] text-slate-400">Complete verification to proceed</p>
             </div>
           )}
         </div>
       </div>
       
-      {!isAdmin && <AdSlot html={settings.adSlots.bottom} />}
+      {!isAdmin && <AdSlot html={settings.adSlots.bottom} className="mt-40 border-t border-slate-100" />}
     </div>
   );
 };

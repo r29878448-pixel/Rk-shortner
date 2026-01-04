@@ -40,15 +40,12 @@ const ApiHandler = () => {
     const currentUser = storedUserString ? JSON.parse(storedUserString) : null;
 
     if (!api && !url) {
-      if (!currentUser) {
-        navigate('/login');
-      }
       return;
     }
 
     if (api && url) {
       if (!currentUser || currentUser.apiKey !== api) {
-        setError('AUTH_ERROR: Invalid API Token.');
+        setError('AUTH_ERROR: Invalid API Token. Access denied.');
         return;
       }
 
@@ -69,43 +66,48 @@ const ApiHandler = () => {
       const finalResult = `${baseUrl}#/s/${shortCode}`;
       setResult(finalResult);
     } else {
-      setError('PARAM_ERROR: api and url parameters required.');
+      setError('PARAM_ERROR: both "api" and "url" query parameters are required.');
     }
   }, [location, navigate]);
 
   return (
     <div className="min-h-screen bg-slate-900 flex items-center justify-center p-6 text-white">
-      <div className="max-w-2xl w-full bg-white/5 border border-white/10 p-12 md:p-20 rounded-[3rem] backdrop-blur-3xl">
+      <div className="max-w-2xl w-full bg-white/5 border border-white/10 p-12 md:p-16 rounded-[3rem] backdrop-blur-3xl">
         <div className="flex items-center justify-center space-x-4 mb-12">
-           <div className="w-16 h-16 bg-indigo-600 rounded-2xl flex items-center justify-center"><Code className="w-8 h-8" /></div>
+           <div className="w-16 h-16 bg-indigo-600 rounded-2xl flex items-center justify-center shadow-2xl shadow-indigo-500/20">
+             <Code className="w-8 h-8" />
+           </div>
            <h2 className="text-3xl font-black uppercase tracking-tighter">API Terminal</h2>
         </div>
 
-        {error && <div className="p-6 bg-red-500/10 border border-red-500/20 text-red-400 rounded-2xl text-xs font-black text-center mb-6 uppercase tracking-widest">{error}</div>}
+        {error && <div className="p-6 bg-red-500/10 border border-red-500/20 text-red-400 rounded-2xl text-[10px] font-black text-center mb-6 uppercase tracking-widest">{error}</div>}
         
         {result ? (
           <div className="space-y-6 text-center animate-in">
-            <div className="bg-slate-800 p-8 rounded-2xl font-mono text-indigo-300 text-sm break-all border border-white/5">{result}</div>
-            <button onClick={() => { navigator.clipboard.writeText(result || ''); setIsCopied(true); setTimeout(() => setIsCopied(false), 2000); }} className="w-full py-5 bg-white text-slate-900 rounded-xl font-black uppercase text-xs tracking-widest shadow-2xl">
-              {isCopied ? 'Link Copied' : 'Copy API Result'}
+            <div className="bg-slate-800 p-8 rounded-2xl font-mono text-indigo-300 text-sm break-all border border-white/5 shadow-inner">
+              {result}
+            </div>
+            <button onClick={() => { navigator.clipboard.writeText(result || ''); setIsCopied(true); setTimeout(() => setIsCopied(false), 2000); }} className="w-full py-5 bg-white text-slate-900 rounded-xl font-black uppercase text-xs tracking-widest shadow-2xl active:scale-95 transition">
+              {isCopied ? 'Link Copied' : 'Copy Result'}
             </button>
           </div>
-        ) : !error && (
-          <div className="space-y-10">
-            <div className="p-8 bg-white/5 rounded-2xl border border-white/5 space-y-4">
-              <p className="text-[10px] font-black uppercase tracking-widest text-indigo-400">Documentation</p>
-              <code className="block text-[10px] text-slate-400 break-all leading-loose">
+        ) : (
+          <div className="space-y-8">
+            <div className="p-8 bg-white/5 rounded-3xl border border-white/5 space-y-4">
+              <p className="text-[10px] font-black uppercase tracking-[0.3em] text-indigo-400">REST Integration Endpoint</p>
+              <code className="block text-[11px] text-slate-400 break-all leading-relaxed bg-black/20 p-4 rounded-xl">
                 GET {window.location.origin}/api?api=YOUR_KEY&url=YOUR_URL
               </code>
+              <p className="text-[9px] text-slate-500 font-bold uppercase">Format: JSON or Raw text response</p>
             </div>
-            <div className="text-center py-4 opacity-50">
-               <Cpu className="w-10 h-10 text-indigo-500 animate-pulse mx-auto mb-4" />
-               <p className="text-[10px] font-black uppercase tracking-widest">Awaiting programmatic request...</p>
+            <div className="text-center opacity-40">
+               <Cpu className="w-12 h-12 text-indigo-500 animate-pulse mx-auto mb-4" />
+               <p className="text-[10px] font-black uppercase tracking-widest">Awaiting programmatic execution...</p>
             </div>
           </div>
         )}
         <button onClick={() => navigate('/')} className="w-full mt-10 text-indigo-400 hover:text-white transition text-[10px] font-black uppercase tracking-[0.2em]">
-          <ChevronLeft className="w-4 h-4 inline mr-2" /> Back to Home
+          <ChevronLeft className="w-4 h-4 inline mr-2" /> Return to Root Node
         </button>
       </div>
     </div>
@@ -140,53 +142,56 @@ const GlobalLayout: React.FC<GlobalLayoutProps> = ({ children, settings, current
               </RouterLink>
             </div>
             
-            <div className="hidden md:flex items-center space-x-8">
-              <RouterLink to="/" className="text-[11px] font-black text-slate-600 hover:text-indigo-600 uppercase tracking-widest">Create</RouterLink>
-              <RouterLink to="/api" className="text-[11px] font-black text-slate-600 hover:text-indigo-600 uppercase tracking-widest">API Tools</RouterLink>
-              <a href={settings.telegramBotUrl} target="_blank" className="flex items-center text-[11px] font-black text-indigo-600 uppercase tracking-widest group">
-                <Megaphone className="w-3 h-3 mr-2 group-hover:animate-bounce" /> Buy Ads
-              </a>
-              <RouterLink to="/blog" className="text-[11px] font-black text-slate-600 hover:text-indigo-600 uppercase tracking-widest">Insights</RouterLink>
+            <div className="hidden md:flex items-center space-x-10">
+              <RouterLink to="/" className="text-[11px] font-black text-slate-600 hover:text-indigo-600 uppercase tracking-[0.2em] transition">Create</RouterLink>
+              <RouterLink to="/api" className="text-[11px] font-black text-indigo-600 hover:text-indigo-800 uppercase tracking-[0.2em] flex items-center transition">
+                <Code className="w-4 h-4 mr-2" /> API Terminal
+              </RouterLink>
+              <RouterLink to="/blog" className="text-[11px] font-black text-slate-600 hover:text-indigo-600 uppercase tracking-[0.2em] transition">Insights</RouterLink>
               
               {currentUser ? (
-                <div className="flex items-center space-x-6 border-l pl-8 border-slate-200">
-                  <RouterLink to={currentUser.role === UserRole.ADMIN ? "/admin" : "/dashboard"} className="text-[11px] font-black text-white bg-slate-900 px-6 py-3 rounded-xl uppercase tracking-widest">Dashboard</RouterLink>
-                  <button onClick={handleLogout} className="text-[11px] font-black text-red-500 uppercase tracking-widest">Logout</button>
+                <div className="flex items-center space-x-6 border-l pl-10 border-slate-200">
+                  <RouterLink to={currentUser.role === UserRole.ADMIN ? "/admin" : "/dashboard"} className="text-[11px] font-black text-white bg-slate-900 px-6 py-3 rounded-xl uppercase tracking-widest shadow-xl">Dashboard</RouterLink>
+                  <button onClick={handleLogout} className="text-[11px] font-black text-red-500 hover:text-red-700 uppercase tracking-widest transition">Logout</button>
                 </div>
               ) : (
-                <RouterLink to="/login" className="text-[11px] font-black text-slate-900 border-2 border-slate-900 px-6 py-3 rounded-xl uppercase tracking-widest">Login</RouterLink>
+                <RouterLink to="/login" className="text-[11px] font-black text-slate-900 border-2 border-slate-900 px-6 py-3 rounded-xl uppercase tracking-widest hover:bg-slate-900 hover:text-white transition">Login</RouterLink>
               )}
             </div>
 
             <div className="md:hidden flex items-center">
-              <button onClick={() => setIsMenuOpen(!isMenuOpen)} className="text-slate-900 p-2"><Menu className="w-7 h-7" /></button>
+              <button onClick={() => setIsMenuOpen(!isMenuOpen)} className="text-slate-900 p-2 bg-slate-50 rounded-xl"><Menu className="w-7 h-7" /></button>
             </div>
           </div>
         </div>
 
         {isMenuOpen && (
-          <div className="md:hidden fixed inset-x-0 top-20 bottom-0 z-[999] bg-white border-t border-slate-100 p-6 space-y-4">
-            <RouterLink to="/" className="block p-4 bg-slate-50 rounded-xl text-[11px] font-black uppercase tracking-widest">Shorten Link</RouterLink>
-            <RouterLink to="/api" className="block p-4 bg-slate-50 rounded-xl text-[11px] font-black uppercase tracking-widest">Developer API</RouterLink>
-            <a href={settings.telegramBotUrl} target="_blank" className="block p-4 bg-indigo-50 text-indigo-600 rounded-xl text-[11px] font-black uppercase tracking-widest">Buy Network Ads</a>
-            <RouterLink to="/blog" className="block p-4 bg-slate-50 rounded-xl text-[11px] font-black uppercase tracking-widest">Blog & Insights</RouterLink>
-            <div className="pt-6 border-t border-slate-100 space-y-4">
+          <div className="md:hidden fixed inset-x-0 top-20 bottom-0 z-[999] bg-white border-t border-slate-100 p-6 space-y-4 animate-in">
+            <RouterLink to="/" className="block p-5 bg-slate-50 rounded-2xl text-[12px] font-black uppercase tracking-widest text-slate-900">Shorten Relay</RouterLink>
+            <RouterLink to="/api" className="block p-5 bg-indigo-50 rounded-2xl text-[12px] font-black uppercase tracking-widest text-indigo-600 flex items-center">
+               <Code className="w-5 h-5 mr-3" /> API Developer Tools
+            </RouterLink>
+            <RouterLink to="/blog" className="block p-5 bg-slate-50 rounded-2xl text-[12px] font-black uppercase tracking-widest text-slate-900">Blog & Insights</RouterLink>
+            <div className="pt-8 border-t border-slate-100 space-y-4">
               {currentUser ? (
                 <>
-                  <RouterLink to={currentUser.role === UserRole.ADMIN ? "/admin" : "/dashboard"} className="block p-4 bg-indigo-600 text-white text-center rounded-xl text-[11px] font-black uppercase tracking-widest">Go to Dashboard</RouterLink>
-                  <button onClick={handleLogout} className="w-full p-4 text-center text-[11px] font-black text-red-500 uppercase tracking-widest">Logout Session</button>
+                  <RouterLink to={currentUser.role === UserRole.ADMIN ? "/admin" : "/dashboard"} className="block p-5 bg-slate-900 text-white text-center rounded-2xl text-[12px] font-black uppercase tracking-widest">Return to Dashboard</RouterLink>
+                  <button onClick={handleLogout} className="w-full p-5 text-center text-[12px] font-black text-red-500 uppercase tracking-widest">Logout Session</button>
                 </>
               ) : (
-                <RouterLink to="/login" className="block p-4 bg-slate-900 text-white text-center rounded-xl text-[11px] font-black uppercase tracking-widest">Authentication Portal</RouterLink>
+                <RouterLink to="/login" className="block p-5 bg-slate-900 text-white text-center rounded-2xl text-[12px] font-black uppercase tracking-widest">Authentication Portal</RouterLink>
               )}
             </div>
           </div>
         )}
       </nav>
       <main className="flex-grow">{children}</main>
-      <footer className="bg-slate-900 py-16 px-4 text-center">
-         <span className="text-xl font-black text-white uppercase tracking-tighter">{settings.siteName} Network</span>
-         <p className="text-slate-600 text-[10px] font-bold uppercase tracking-[0.3em] mt-4">© 2026 SwiftLink Cloud. Global Infrastructure.</p>
+      <footer className="bg-slate-900 py-20 px-4 text-center">
+         <div className="flex items-center justify-center space-x-3 mb-6">
+            <div className="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center"><LinkIcon className="text-white w-4 h-4" /></div>
+            <span className="text-2xl font-black text-white uppercase tracking-tighter">{settings.siteName} Global</span>
+         </div>
+         <p className="text-slate-600 text-[10px] font-black uppercase tracking-[0.5em]">© 2026 SwiftLink Infrastructure.</p>
       </footer>
     </div>
   );
