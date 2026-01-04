@@ -1,7 +1,9 @@
 
-import React from 'react';
-import { BlogPost } from '../types.ts';
+import React, { useMemo } from 'react';
+import { BlogPost, SiteSettings } from '../types.ts';
 import { Calendar, ArrowRight, Clock, ShieldCheck, TrendingUp } from 'lucide-react';
+import AdSlot from '../components/AdSlot.tsx';
+import { DEFAULT_SETTINGS } from '../constants.tsx';
 
 const DEMO_POSTS: BlogPost[] = [
   {
@@ -34,9 +36,18 @@ const DEMO_POSTS: BlogPost[] = [
 ];
 
 const BlogPage: React.FC = () => {
+  const settings: SiteSettings = useMemo(() => {
+    const saved = localStorage.getItem('swiftlink_settings');
+    return saved ? JSON.parse(saved) : DEFAULT_SETTINGS;
+  }, []);
+
   return (
     <div className="bg-slate-50 py-12 md:py-20 min-h-screen font-sans">
       <div className="max-w-7xl mx-auto px-6">
+        
+        {/* TOP AD */}
+        <AdSlot html={settings.adSlots.top} className="mb-12" />
+
         <div className="max-w-3xl mb-12 md:mb-20">
           <div className="inline-flex items-center space-x-2 text-indigo-600 bg-indigo-50 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest mb-4">
             <TrendingUp className="w-3 h-3" /> <span>Platform Insights</span>
@@ -44,6 +55,9 @@ const BlogPage: React.FC = () => {
           <h1 className="text-4xl md:text-5xl font-black text-slate-900 tracking-tighter mb-4 uppercase">News & Insights</h1>
           <p className="text-base md:text-lg text-slate-500 font-medium leading-relaxed">Official updates, security briefings, and marketing strategies for professional link management.</p>
         </div>
+
+        {/* MIDDLE AD */}
+        <AdSlot html={settings.adSlots.middle} className="mb-12" />
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 md:gap-10">
           {DEMO_POSTS.map(post => (
@@ -70,6 +84,9 @@ const BlogPage: React.FC = () => {
             </article>
           ))}
         </div>
+
+        {/* BOTTOM AD */}
+        <AdSlot html={settings.adSlots.bottom} className="mt-20" />
       </div>
     </div>
   );

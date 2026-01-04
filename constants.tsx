@@ -1,21 +1,38 @@
 
 import { SiteSettings, BlogPost } from './types.ts';
 
+const USER_AD_CODE_1 = `
+<script async="async" data-cfasync="false" src="https://pl28393495.effectivegatecpm.com/6825e17601f8cf0d3f85f53185a1ba61/invoke.js"></script>
+<div id="container-6825e17601f8cf0d3f85f53185a1ba61"></div>
+`;
+
+const USER_AD_CODE_2 = `
+<div style="display:flex; justify-content:center;">
+<script>
+  atOptions = {
+    'key' : '3980b1017b92901b3bbbb650fbd73b7e',
+    'format' : 'iframe',
+    'height' : 250,
+    'width' : 300,
+    'params' : {}
+  };
+</script>
+<script src="https://www.highperformanceformat.com/3980b1017b92901b3bbbb650fbd73b7e/invoke.js"></script>
+</div>
+`;
+
 export const DEFAULT_SETTINGS: SiteSettings = {
   siteName: 'SwiftLink',
   adsEnabled: true,
   adSlots: {
-    top: '<div style="background: #eff6ff; padding: 25px; text-align: center; border-bottom: 3px solid #dbeafe; color: #1e40af; font-weight: 900; font-size: 14px; letter-spacing: 0.1em; margin-bottom: 30px;">[TOP HEADER AD SLOT]</div>',
-    middle: '<div style="background: #f8fafc; padding: 80px; margin: 50px 0; border: 4px dashed #e2e8f0; border-radius: 40px; text-align: center; color: #64748b; font-weight: 800; font-size: 18px;">[MAIN CONTENT AD SLOT]</div>',
-    bottom: '<div style="background: #0f172a; padding: 50px; text-align: center; color: #94a3b8; font-weight: 800; border-top: 1px solid #1e293b; letter-spacing: 0.2em; margin-top: 50px;">[FOOTER BOTTOM AD SLOT]</div>',
-    contentAds: [
-      '<div style="background: #f1f5f9; padding: 40px; margin: 30px 0; border-left: 10px solid #4f46e5; color: #475569; font-weight: 700;">ARTICLE AD #1: SPONSORED ANALYSIS</div>',
-      '<div style="background: #f1f5f9; padding: 40px; margin: 30px 0; border-left: 10px solid #7c3aed; color: #475569; font-weight: 700;">ARTICLE AD #2: DATA PARTNER BLOCK</div>'
-    ]
+    top: USER_AD_CODE_1,
+    middle: USER_AD_CODE_2,
+    bottom: USER_AD_CODE_1,
+    contentAds: [USER_AD_CODE_2, USER_AD_CODE_1]
   },
   stepAds: [],
   redirectDelay: 15,
-  totalSteps: 1,
+  totalSteps: 2, // Default to 2 pages as requested
   planConfig: {
     freeLimit: 1000000,
     proLimit: 1000000,
@@ -27,7 +44,7 @@ export const DEFAULT_SETTINGS: SiteSettings = {
   cpmRate: 150 
 };
 
-const generateEndlessContent = (topic: string, count: number = 30) => {
+const generateEndlessContent = (topic: string, count: number = 20) => {
   const segment = `
 Digital infrastructure and the architecture of link management are evolving at a breakneck pace in 2026. When we analyze the telemetry of modern ${topic}, we see a clear distinction between legacy systems and high-performance verification relays. This deep-dive analysis serves to educate the user on the complexities of secure data transmission and why multi-step protocols are the new gold standard for enterprise security.
 
