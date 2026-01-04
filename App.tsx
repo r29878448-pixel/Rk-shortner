@@ -31,7 +31,7 @@ const ApiHandler = () => {
   const navigate = useNavigate();
   const [result, setResult] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [isCopied, setIsCopied] = useState(false);
+  const [isResultCopied, setIsResultCopied] = useState(false);
   const [isKeyCopied, setIsKeyCopied] = useState(false);
   const [isUrlCopied, setIsUrlCopied] = useState(false);
   const [user, setUser] = useState<User | null>(null);
@@ -89,6 +89,14 @@ const ApiHandler = () => {
     setTimeout(() => setIsUrlCopied(false), 2000);
   };
 
+  const copyResult = () => {
+    if (result) {
+      navigator.clipboard.writeText(result);
+      setIsResultCopied(true);
+      setTimeout(() => setIsResultCopied(false), 2000);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-slate-900 flex items-center justify-center p-6 text-white">
       <div className="max-w-3xl w-full bg-white/5 border border-white/10 p-10 md:p-16 rounded-[2.5rem] backdrop-blur-3xl shadow-2xl">
@@ -104,24 +112,36 @@ const ApiHandler = () => {
         
         {result ? (
           <div className="space-y-6 text-center animate-in">
-            <div className="bg-slate-800 p-8 rounded-2xl font-mono text-indigo-300 text-sm break-all border border-white/5">
-              {result}
+            <div className="text-left mb-4">
+              <p className="text-[10px] font-black uppercase tracking-[0.4em] text-indigo-400">Generated Short Link</p>
             </div>
-            <button onClick={() => { navigator.clipboard.writeText(result || ''); setIsCopied(true); setTimeout(() => setIsCopied(false), 2000); }} className="w-full py-6 bg-white text-slate-900 rounded-2xl font-black uppercase text-xs tracking-[0.2em] shadow-2xl active:scale-95 transition">
-              {isCopied ? 'Result Copied' : 'Copy Result'}
+            <div className="bg-slate-800 p-8 rounded-2xl font-mono text-indigo-300 text-sm break-all border border-white/5 flex items-center justify-between gap-4">
+              <span className="truncate">{result}</span>
+              <button onClick={copyResult} className="shrink-0 p-3 bg-white/10 rounded-xl hover:bg-white/20 transition">
+                {isResultCopied ? <Check className="w-4 h-4 text-green-400" /> : <Copy className="w-4 h-4" />}
+              </button>
+            </div>
+            <button onClick={copyResult} className="w-full py-6 bg-white text-slate-900 rounded-2xl font-black uppercase text-xs tracking-[0.2em] shadow-2xl active:scale-95 transition">
+              {isResultCopied ? 'Result Copied' : 'Copy Short Link'}
             </button>
           </div>
         ) : (
           <div className="space-y-10">
             {/* API KEY SECTION */}
             <div className="space-y-4">
-              <p className="text-[10px] font-black uppercase tracking-[0.4em] text-indigo-400">Your Private Access Key</p>
+              <div className="flex justify-between items-end">
+                <p className="text-[10px] font-black uppercase tracking-[0.4em] text-indigo-400">Your Private API Key</p>
+                {user && (
+                   <span className="text-[9px] font-bold text-slate-500 uppercase tracking-widest">Active Token</span>
+                )}
+              </div>
               <div className="flex items-center gap-4">
                 <div className="flex-grow bg-slate-800 p-5 rounded-2xl font-mono text-indigo-100 text-xs border border-white/5 overflow-hidden truncate">
                   {user ? user.apiKey : 'Login to view API Key'}
                 </div>
                 {user && (
-                  <button onClick={copyKey} className="p-5 bg-white/5 hover:bg-white/10 border border-white/10 rounded-2xl transition-all active:scale-90 group">
+                  <button onClick={copyKey} className="flex items-center gap-3 px-6 py-5 bg-white/5 hover:bg-white/10 border border-white/10 rounded-2xl transition-all active:scale-95 group">
+                    <span className="text-[10px] font-black uppercase tracking-widest hidden sm:inline">Copy Key</span>
                     {isKeyCopied ? <Check className="w-5 h-5 text-green-400" /> : <Copy className="w-5 h-5 text-slate-300 group-hover:text-white" />}
                   </button>
                 )}
@@ -130,27 +150,34 @@ const ApiHandler = () => {
 
             {/* ENDPOINT SECTION */}
             <div className="space-y-4">
-              <p className="text-[10px] font-black uppercase tracking-[0.4em] text-indigo-400">Endpoint Structure</p>
+              <p className="text-[10px] font-black uppercase tracking-[0.4em] text-indigo-400">API Endpoint Structure</p>
               <div className="relative group">
-                <div className="bg-black/40 p-6 md:p-8 rounded-2xl border border-white/5 font-mono text-[11px] text-slate-300 leading-relaxed overflow-x-auto">
-                  <span className="text-green-400">GET</span> {window.location.origin}{window.location.pathname.split('#')[0]}api?api=<span className="text-indigo-400">{user ? user.apiKey : 'YOUR_KEY'}</span>&url=<span className="text-indigo-400">YOUR_URL</span>
+                <div className="bg-black/40 p-6 md:p-8 rounded-2xl border border-white/5 font-mono text-[11px] text-slate-300 leading-relaxed overflow-x-auto whitespace-nowrap">
+                  <span className="text-green-400 font-bold mr-3">GET</span> 
+                  {window.location.origin}{window.location.pathname.split('#')[0]}api?api=
+                  <span className="text-indigo-400">{user ? user.apiKey : 'YOUR_KEY'}</span>
+                  &url=<span className="text-indigo-400">YOUR_URL</span>
                 </div>
-                <button onClick={copyEndpoint} className="absolute top-4 right-4 p-3 bg-white/5 hover:bg-white/10 border border-white/5 rounded-xl transition-all active:scale-90 group">
+                <button onClick={copyEndpoint} className="absolute top-4 right-4 flex items-center gap-2 p-3 bg-white/5 hover:bg-white/10 border border-white/5 rounded-xl transition-all active:scale-95 group">
+                  <span className="text-[9px] font-black uppercase tracking-widest hidden sm:inline text-slate-400">Copy URL</span>
                   {isUrlCopied ? <Check className="w-4 h-4 text-green-400" /> : <Copy className="w-4 h-4 text-slate-500 group-hover:text-white" />}
                 </button>
               </div>
             </div>
 
-            <div className="bg-white/5 p-6 rounded-2xl border border-white/5">
-              <p className="text-xs text-slate-500 font-bold uppercase tracking-widest text-center leading-relaxed">
-                Send a GET request to shorten links automatically from your application or script.
+            <div className="bg-white/5 p-8 rounded-2xl border border-white/5">
+              <h4 className="text-[11px] font-black uppercase tracking-[0.2em] text-white mb-4 flex items-center">
+                <Shield className="w-4 h-4 mr-2 text-indigo-500" /> Usage Guidelines
+              </h4>
+              <p className="text-xs text-slate-500 font-bold uppercase tracking-widest leading-relaxed">
+                Automate your workflow by sending GET requests. Ensure your target URL is URL-encoded for reliability across network nodes.
               </p>
             </div>
           </div>
         )}
 
-        <button onClick={() => navigate('/')} className="w-full mt-12 text-slate-500 hover:text-white transition text-[10px] font-black uppercase tracking-[0.3em] flex items-center justify-center">
-          <ChevronLeft className="w-4 h-4 mr-2" /> Back to Dashboard
+        <button onClick={() => navigate('/')} className="w-full mt-12 text-slate-500 hover:text-white transition text-[10px] font-black uppercase tracking-[0.3em] flex items-center justify-center group">
+          <ChevronLeft className="w-4 h-4 mr-2 group-hover:-translate-x-1 transition-transform" /> Return to Command Center
         </button>
       </div>
     </div>

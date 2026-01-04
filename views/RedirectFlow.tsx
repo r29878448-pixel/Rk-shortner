@@ -70,6 +70,7 @@ const RedirectFlow: React.FC<RedirectFlowProps> = ({ settings, currentUser }) =>
     setProgress(0);
     window.scrollTo({ top: 0, behavior: 'smooth' });
     
+    // Simulated network verification delay
     setTimeout(() => {
       setLoading(false);
       setFlowState('counting');
@@ -175,6 +176,7 @@ const RedirectFlow: React.FC<RedirectFlowProps> = ({ settings, currentUser }) =>
 
   return (
     <div className="min-h-screen bg-white text-slate-900 font-sans pb-40">
+      {/* PERSISTENT HEADER AD - SHOWS FROM REDIRECT START */}
       <AdSlot html={activeSettings.adSlots.top} className="py-4 bg-slate-50 border-b border-slate-100" />
       
       <div className="sticky top-0 z-[100] w-full bg-slate-900 text-white px-8 py-5 flex justify-between items-center shadow-lg border-b border-white/10">
@@ -191,107 +193,83 @@ const RedirectFlow: React.FC<RedirectFlowProps> = ({ settings, currentUser }) =>
 
       <div className="max-w-4xl mx-auto px-6 pt-20">
         <div className="text-center mb-16">
-          <h1 className="text-4xl md:text-6xl font-black mb-8 tracking-tighter uppercase leading-[0.9] text-balance">
-            {isFinalStep ? 'Relay Connection Initialized' : post.title}
+          <h1 className="text-4xl md:text-6xl font-black mb-8 tracking-tighter uppercase leading-tight">
+            {flowState === 'counting' ? 'Verifying Session' : 
+             flowState === 'verifying' ? 'Security Check' : 
+             flowState === 'ready' ? 'Access Granted' : 'Processing...'}
           </h1>
-          <div className="flex items-center justify-center space-x-4 text-[10px] font-black uppercase tracking-[0.4em] text-slate-400">
-             <span>{activeSettings.siteName} Protocol</span>
-             <span className="w-1.5 h-1.5 bg-indigo-500 rounded-full"></span>
-             <span>Link Ref: {shortCode}</span>
+          <div className="max-w-md mx-auto">
+            <div className="h-2 w-full bg-slate-100 rounded-full overflow-hidden mb-4">
+              <div 
+                className="h-full bg-indigo-600 transition-all duration-100 ease-linear"
+                style={{ width: `${progress}%` }}
+              />
+            </div>
+            <p className="text-[10px] font-black uppercase tracking-[0.4em] text-slate-400">
+              {flowState === 'counting' ? `Estimated Time: ${Math.ceil((activeSettings.redirectDelay * (100 - progress)) / 100)}s` : 
+               flowState === 'verifying' ? 'Establishing Secure Handshake' : 
+               flowState === 'ready' ? 'Connection Finalized' : 'Initializing Relay'}
+            </p>
           </div>
         </div>
 
-        <div className="bg-slate-900 border border-white/10 rounded-xl p-10 md:p-16 mb-20 text-center relative overflow-hidden shadow-2xl">
-           <div className="absolute top-0 left-0 w-full h-1 bg-white/5">
-             <div className="h-full bg-indigo-500 transition-all duration-300" style={{ width: `${progress}%` }} />
-           </div>
-
-           {flowState === 'counting' && (
-             <div className="animate-in space-y-8 flex flex-col items-center">
-               {/* SHOW ADS DURING COUNTDOWN WHEN BUTTON IS NOT SHOWING */}
-               <AdSlot html={activeSettings.adSlots.top} className="mb-8 w-full" />
-               
-               <div className="flex justify-center">
-                  <div className="p-8 bg-white/5 rounded-xl border border-white/10">
-                    <Lock className="w-12 h-12 text-indigo-400 animate-pulse" />
-                  </div>
-               </div>
-               <h3 className="text-xl font-black uppercase tracking-tight text-white">Validating Relay Parameters...</h3>
-               <p className="text-[10px] text-slate-500 font-black uppercase tracking-widest">Handshake Progress ({Math.ceil((1 - progress/100) * activeSettings.redirectDelay)}s)</p>
-               
-               <AdSlot html={activeSettings.adSlots.bottom} className="mt-8 w-full" />
-             </div>
-           )}
-
-           {flowState === 'verifying' && (
-             <div className="animate-in flex flex-col items-center w-full">
-                {/* HIDE BIG ADS WHEN BUTTON IS SHOWING - PER USER REQUEST */}
-                <div className="my-6 w-full">
-                  <button 
-                    onClick={handleVerify} 
-                    className="w-full max-w-md py-10 bg-indigo-600 text-white rounded-xl font-black uppercase text-base tracking-[0.2em] shadow-[0_25px_50px_-12px_rgba(79,70,229,0.5)] hover:bg-indigo-700 transition-all active:scale-95 flex items-center justify-center mx-auto group"
-                  >
-                    <Unlock className="w-6 h-6 mr-4 group-hover:rotate-12 transition-transform" /> Authorize Phase {currentStep}
-                  </button>
-                </div>
-             </div>
-           )}
-
-           {flowState === 'ready' && (
-             <div className="animate-in space-y-8">
-                <div className="w-20 h-20 bg-green-500/10 rounded-xl mx-auto flex items-center justify-center border border-green-500/20 shadow-xl shadow-green-500/5">
-                   <Unlock className="w-10 h-10 text-green-500" />
-                </div>
-                <h3 className="text-xl font-black uppercase tracking-tight text-green-400">Step Authenticated</h3>
-                <div className="flex flex-col items-center text-indigo-400 animate-bounce">
-                  <p className="text-[10px] font-black uppercase tracking-widest mb-4 opacity-50">Proceed below</p>
-                  <ChevronDown className="w-10 h-10" />
-                </div>
-             </div>
-           )}
-        </div>
-
-        <div className="prose prose-xl max-w-none text-slate-700 text-justify space-y-12 leading-relaxed mb-40">
-          <p className="text-2xl font-black text-slate-900 border-l-[10px] border-indigo-600 pl-8 italic py-4 bg-slate-50 rounded-r-xl uppercase tracking-tighter">
-            "Network Node {shortCode}: Handshake sequence {currentStep} established successfully."
-          </p>
-          <div className="whitespace-pre-line text-lg font-medium text-slate-500 leading-relaxed">
-            {post.content}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-12 items-start">
+          <div className="lg:col-span-2 space-y-12">
+            <article className="prose prose-slate max-w-none">
+              <div className="mb-8 overflow-hidden rounded-2xl aspect-video">
+                <img src={post.imageUrl} alt={post.title} className="w-full h-full object-cover" />
+              </div>
+              <h2 className="text-3xl font-black uppercase tracking-tight mb-6">{post.title}</h2>
+              <div className="text-slate-600 font-medium leading-relaxed whitespace-pre-line">
+                {post.content || post.excerpt}
+              </div>
+            </article>
+            
+            <AdSlot html={activeSettings.adSlots.middle} className="py-8 border-y border-slate-100" />
           </div>
-        </div>
 
-        <div className="pt-40 border-t-8 border-slate-900 text-center" ref={bottomRef}>
-          {flowState === 'ready' ? (
-            <div className="animate-in flex flex-col items-center w-full">
-              <h2 className="text-5xl md:text-8xl font-black text-slate-900 tracking-tighter uppercase mb-16 leading-[0.8] text-balance">
-                {isFinalStep ? 'RELAY READY' : `STEP ${currentStep} DONE`}
-              </h2>
-
-              {/* HIDE BIG ADS WHEN FINAL BUTTON IS SHOWING - PER USER REQUEST */}
-              <div className="my-8 w-full">
-                <button 
-                  onClick={handleNextAction} 
-                  className="w-full max-w-2xl py-14 bg-slate-900 text-white rounded-xl font-black text-3xl md:text-4xl uppercase tracking-tighter shadow-2xl hover:bg-black transition-all active:scale-95 flex items-center justify-center mx-auto group relative overflow-hidden"
-                >
-                  <div className="absolute inset-0 bg-white/5 -translate-x-full group-hover:translate-x-full transition-transform duration-700"></div>
-                  <span className="relative z-10 flex items-center">
-                    {isFinalStep ? 'Access Final Destination' : `Initialise Step ${currentStep + 1}`} 
-                    <ArrowRight className="ml-8 w-10 h-10 group-hover:translate-x-4 transition-transform" />
-                  </span>
-                </button>
+          <div className="space-y-8">
+            <div className="bg-slate-50 p-8 rounded-2xl border border-slate-100">
+              <h4 className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-6">Security Protocol</h4>
+              <div className="space-y-4">
+                <div className="flex items-center text-xs font-bold uppercase tracking-widest text-slate-700">
+                  <ShieldCheck className="w-4 h-4 mr-3 text-green-500" /> SSL Encryption
+                </div>
+                <div className="flex items-center text-xs font-bold uppercase tracking-widest text-slate-700">
+                  <Lock className="w-4 h-4 mr-3 text-indigo-500" /> Node Relay Verified
+                </div>
               </div>
             </div>
-          ) : (
-            <div className="opacity-20 flex flex-col items-center pointer-events-none grayscale blur-[1px]">
-               <Lock className="w-16 h-16 mb-8 text-slate-400" />
-               <p className="text-[14px] font-black uppercase tracking-[0.5em] text-slate-400">Node Status: Restricted</p>
-            </div>
-          )}
+            
+            {flowState === 'verifying' && (
+              <button 
+                onClick={handleVerify}
+                className="w-full py-8 bg-indigo-600 text-white rounded-2xl font-black uppercase text-sm tracking-[0.2em] shadow-2xl hover:bg-indigo-700 transition-all flex items-center justify-center animate-bounce"
+              >
+                Verify & Continue <ChevronDown className="ml-3 w-5 h-5" />
+              </button>
+            )}
+
+            {flowState === 'ready' && (
+              <div ref={bottomRef} className="space-y-4 animate-in">
+                <button 
+                  onClick={handleNextAction}
+                  className="w-full py-8 bg-slate-900 text-white rounded-2xl font-black uppercase text-sm tracking-[0.2em] shadow-2xl hover:bg-black transition-all flex items-center justify-center group"
+                >
+                  {isFinalStep ? 'Final Destination' : `Proceed to Step ${currentStep + 1}`}
+                  <ArrowRight className="ml-3 w-5 h-5 group-hover:translate-x-2 transition-transform" />
+                </button>
+                <p className="text-[9px] text-center font-black uppercase tracking-widest text-slate-400">Click button to bypass gateway</p>
+              </div>
+            )}
+          </div>
         </div>
       </div>
-      <AdSlot html={activeSettings.adSlots.bottom} className="mt-40 border-t border-slate-100 py-12" />
+
+      <AdSlot html={activeSettings.adSlots.bottom} className="fixed bottom-0 left-0 right-0 py-4 bg-white border-t border-slate-100 z-50 shadow-[0_-10px_40px_rgba(0,0,0,0.05)]" />
     </div>
   );
 };
 
+// Fixed: Added default export to resolve "Module has no default export" error in App.tsx
 export default RedirectFlow;
