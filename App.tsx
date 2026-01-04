@@ -11,7 +11,8 @@ import {
   ChevronLeft,
   Wallet,
   Globe,
-  Code
+  Code,
+  Megaphone
 } from 'lucide-react';
 import { User, SiteSettings, UserRole } from './types.ts';
 import { DEFAULT_SETTINGS } from './constants.tsx';
@@ -142,6 +143,9 @@ const GlobalLayout: React.FC<GlobalLayoutProps> = ({ children, settings, current
             <div className="hidden md:flex items-center space-x-8">
               <RouterLink to="/" className="text-[11px] font-black text-slate-600 hover:text-indigo-600 uppercase tracking-widest">Create</RouterLink>
               <RouterLink to="/api" className="text-[11px] font-black text-slate-600 hover:text-indigo-600 uppercase tracking-widest">API Tools</RouterLink>
+              <a href={settings.telegramBotUrl} target="_blank" className="flex items-center text-[11px] font-black text-indigo-600 uppercase tracking-widest group">
+                <Megaphone className="w-3 h-3 mr-2 group-hover:animate-bounce" /> Buy Ads
+              </a>
               <RouterLink to="/blog" className="text-[11px] font-black text-slate-600 hover:text-indigo-600 uppercase tracking-widest">Insights</RouterLink>
               
               {currentUser ? (
@@ -164,6 +168,7 @@ const GlobalLayout: React.FC<GlobalLayoutProps> = ({ children, settings, current
           <div className="md:hidden fixed inset-x-0 top-20 bottom-0 z-[999] bg-white border-t border-slate-100 p-6 space-y-4">
             <RouterLink to="/" className="block p-4 bg-slate-50 rounded-xl text-[11px] font-black uppercase tracking-widest">Shorten Link</RouterLink>
             <RouterLink to="/api" className="block p-4 bg-slate-50 rounded-xl text-[11px] font-black uppercase tracking-widest">Developer API</RouterLink>
+            <a href={settings.telegramBotUrl} target="_blank" className="block p-4 bg-indigo-50 text-indigo-600 rounded-xl text-[11px] font-black uppercase tracking-widest">Buy Network Ads</a>
             <RouterLink to="/blog" className="block p-4 bg-slate-50 rounded-xl text-[11px] font-black uppercase tracking-widest">Blog & Insights</RouterLink>
             <div className="pt-6 border-t border-slate-100 space-y-4">
               {currentUser ? (
