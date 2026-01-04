@@ -1,7 +1,8 @@
 
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Copy, Check, Loader2, Zap, Globe, Cpu, Shield } from 'lucide-react';
+// Added ArrowRight to imports to fix "Cannot find name 'ArrowRight'" error on line 87
+import { Copy, Check, Loader2, Zap, Globe, Cpu, Shield, ArrowRight } from 'lucide-react';
 import { Link as LinkType, SiteSettings, User } from '../types.ts';
 
 interface HomePageProps {
@@ -62,48 +63,54 @@ const HomePage: React.FC<HomePageProps> = ({ settings, currentUser: initialUser 
   return (
     <div className="bg-white min-h-[80vh] flex flex-col justify-center py-12 px-6">
       <div className="max-w-4xl mx-auto text-center">
-        <div className="inline-flex items-center space-x-2 bg-indigo-50 text-indigo-600 px-5 py-2.5 rounded-xl text-[11px] font-black uppercase tracking-[0.25em] mb-12 shadow-sm">
-          <Globe className="w-4 h-4" /> <span>Global Link Relay Node</span>
+        <div className="inline-flex items-center space-x-3 bg-indigo-50 text-indigo-600 px-6 py-3 rounded-xl text-[11px] font-black uppercase tracking-[0.25em] mb-12 shadow-sm border border-indigo-100">
+          <Globe className="w-5 h-5" /> <span>VP LINKS GLOBAL NODE</span>
         </div>
         
-        <h1 className="text-5xl md:text-8xl font-black text-slate-900 tracking-tighter mb-10 uppercase leading-[0.85] text-balance">
-          Manage <br /> <span className="text-indigo-600">Enterprise Relays.</span>
+        <h1 className="text-6xl md:text-9xl font-black text-slate-900 tracking-tighter mb-10 uppercase leading-[0.8] text-balance">
+          Link <br /> <span className="text-indigo-600">Infrastructure.</span>
         </h1>
         
-        <p className="text-slate-400 font-bold uppercase tracking-[0.4em] text-[10px] mb-16">High Performance Monetization & Tracking</p>
+        <p className="text-slate-400 font-bold uppercase tracking-[0.5em] text-[12px] mb-16">Enterprise Redirection & Monetization</p>
         
-        <form onSubmit={handleShorten} className="bg-white p-3 border border-slate-200 flex flex-col md:flex-row gap-4 max-w-2xl mx-auto mb-20 shadow-xl rounded-2xl transition-all focus-within:border-indigo-500">
+        <form onSubmit={handleShorten} className="bg-white p-3 border border-slate-200 flex flex-col md:flex-row gap-4 max-w-2xl mx-auto mb-24 shadow-2xl rounded-xl transition-all focus-within:border-indigo-500">
           <input 
             type="url" 
-            placeholder="Enter destination URL..." 
-            className="flex-grow px-8 py-5 bg-slate-50 border-none rounded-xl focus:ring-4 focus:ring-indigo-100 font-bold text-slate-700 placeholder:text-slate-300"
+            placeholder="Destination URL (https://...)" 
+            className="flex-grow px-8 py-6 bg-slate-50 border-none rounded-xl focus:ring-0 font-bold text-slate-700 placeholder:text-slate-300"
             value={url}
             onChange={(e) => setUrl(e.target.value)}
             required
           />
-          <button type="submit" disabled={isLoading} className="bg-indigo-600 text-white px-10 py-5 rounded-xl font-black uppercase text-xs tracking-[0.2em] shadow-lg hover:bg-indigo-700 transition-all flex items-center justify-center min-w-[180px] active:scale-95">
-            {isLoading ? <Loader2 className="animate-spin w-5 h-5" /> : 'Shorten Relay'}
+          <button type="submit" disabled={isLoading} className="bg-indigo-600 text-white px-12 py-6 rounded-xl font-black uppercase text-xs tracking-[0.2em] shadow-xl hover:bg-indigo-700 transition-all flex items-center justify-center min-w-[200px] active:scale-95 group">
+            {isLoading ? <Loader2 className="animate-spin w-6 h-6" /> : (
+              <>
+                Create Relay <ArrowRight className="ml-3 w-5 h-5 group-hover:translate-x-2 transition-transform" />
+              </>
+            )}
           </button>
         </form>
 
         {shortenedLink && (
-          <div className="bg-slate-900 p-8 rounded-2xl text-white flex flex-col md:flex-row items-center justify-between gap-6 max-w-2xl mx-auto animate-in border border-white/5 shadow-2xl">
+          <div className="bg-slate-900 p-10 rounded-xl text-white flex flex-col md:flex-row items-center justify-between gap-8 max-w-2xl mx-auto animate-in border border-white/10 shadow-[0_40px_80px_-20px_rgba(0,0,0,0.5)]">
             <div className="text-left overflow-hidden w-full">
-              <p className="text-[10px] font-black uppercase tracking-[0.4em] text-indigo-400 mb-3">Relay Port Opened</p>
-              <span className="text-sm md:text-base font-mono truncate block text-indigo-100/80 bg-white/5 p-4 rounded-lg border border-white/10">
-                {window.location.origin + window.location.pathname.split('#')[0]}#/s/{shortenedLink.shortCode}
-              </span>
+              <p className="text-[10px] font-black uppercase tracking-[0.4em] text-indigo-400 mb-4">Relay Endpoint Active</p>
+              <div className="bg-white/5 p-6 rounded-xl border border-white/10">
+                <span className="text-base font-mono truncate block text-indigo-100/90">
+                  {window.location.origin + window.location.pathname.split('#')[0]}#/s/{shortenedLink.shortCode}
+                </span>
+              </div>
             </div>
-            <button onClick={copyToClipboard} className="w-full md:w-auto bg-white text-slate-900 px-8 py-4 rounded-xl font-black text-xs uppercase tracking-widest flex items-center justify-center space-x-3 transition-all hover:bg-indigo-50 active:scale-95 shadow-xl shrink-0">
-              {isCopied ? <Check className="w-4 h-4 text-green-500" /> : <Copy className="w-4 h-4" />}
-              <span>{isCopied ? 'Copied' : 'Copy Link'}</span>
+            <button onClick={copyToClipboard} className="w-full md:w-auto bg-white text-slate-900 px-10 py-5 rounded-xl font-black text-xs uppercase tracking-widest flex items-center justify-center space-x-3 transition-all hover:bg-indigo-50 active:scale-95 shadow-xl shrink-0">
+              {isCopied ? <Check className="w-5 h-5 text-green-500" /> : <Copy className="w-5 h-5" />}
+              <span>{isCopied ? 'Copied' : 'Copy'}</span>
             </button>
           </div>
         )}
 
-        <div className="mt-20 pt-16 border-t border-slate-100 flex flex-col md:flex-row justify-center items-center gap-10 opacity-30">
-           <div className="flex items-center space-x-3"><Cpu className="w-5 h-5" /> <span className="text-[10px] font-black uppercase tracking-widest">Network Speed</span></div>
-           <div className="flex items-center space-x-3"><Shield className="w-5 h-5" /> <span className="text-[10px] font-black uppercase tracking-widest">Secure Handshake</span></div>
+        <div className="mt-32 flex flex-col md:flex-row justify-center items-center gap-16 opacity-40">
+           <div className="flex items-center space-x-4"><Cpu className="w-6 h-6" /> <span className="text-[10px] font-black uppercase tracking-widest">Latency Optimization</span></div>
+           <div className="flex items-center space-x-4"><Shield className="w-6 h-6" /> <span className="text-[10px] font-black uppercase tracking-widest">AES-256 Protocol</span></div>
         </div>
       </div>
     </div>

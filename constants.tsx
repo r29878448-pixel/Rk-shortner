@@ -22,7 +22,7 @@ const USER_AD_CODE_2 = `
 `;
 
 export const DEFAULT_SETTINGS: SiteSettings = {
-  siteName: 'SwiftLink',
+  siteName: 'VP Links',
   adsEnabled: true,
   adSlots: {
     top: USER_AD_CODE_1,
@@ -40,36 +40,36 @@ export const DEFAULT_SETTINGS: SiteSettings = {
     proPrice: 0,
     businessPrice: 0
   },
-  telegramBotUrl: 'https://t.me/SwiftLinkSupportBot',
+  telegramBotUrl: 'https://t.me/VPLinksSupportBot',
   cpmRate: 150 
 };
 
 const generateContent = (topic: string) => {
   return `
-    Security is paramount in digital link management. When dealing with ${topic}, verifying user sessions through multi-stage gateways is the most effective way to prevent automated bot traffic. This ensure that publishers receive high-quality engagements that translate to sustainable revenue.
+    Security is the core of VP Links. When dealing with ${topic}, verifying user sessions through multi-stage gateways is the most effective way to prevent automated bot traffic. This ensures that our partners receive high-quality traffic that converts.
     
-    In 2026, the redirection landscape has shifted. Users expect transparency and speed, even while verification protocols are running. By providing educational content during these brief delays, we bridge the gap between necessary security and user engagement.
+    The redirection landscape in 2026 requires transparency and speed. Even during verification, we aim to provide value. By showing educational snippets during the wait time, we bridge the gap between necessary security and a smooth user experience.
     
-    The architecture of our relay nodes allows for seamless transitions between verification steps. Each page load performs a unique handshake, ensuring the session remains untainted. This multi-page approach is what separates enterprise-level link infrastructure from basic shortening services.
+    VP Links uses a multi-node relay architecture. Each page performs a unique cryptographic handshake, ensuring the session remains valid and secure from end to end.
   `.repeat(8);
 };
 
 export const DEMO_POSTS: BlogPost[] = [
   {
     id: '1',
-    title: 'Understanding Multi-Stage Verification',
+    title: 'Why VP Links leads in Security',
     excerpt: 'Deep dive into why multi-step gateways are essential for modern link infrastructure.',
     content: generateContent('Network Security'),
-    author: 'System Admin',
+    author: 'VPL Admin',
     date: 'Oct 24, 2025',
     imageUrl: 'https://images.unsplash.com/photo-1550751827-4bd374c3f58b?auto=format&fit=crop&q=80&w=800'
   },
   {
     id: '2',
-    title: 'Optimizing Link Monetization',
-    excerpt: 'Strategies for maximizing your earnings through high-quality traffic redirects.',
+    title: 'Monetization for Professionals',
+    excerpt: 'Strategies for maximizing your earnings through high-quality traffic redirects with VP Links.',
     content: generateContent('Monetization'),
-    author: 'Finance Node',
+    author: 'VPL Finance',
     date: 'Nov 02, 2025',
     imageUrl: 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&q=80&w=800'
   }
