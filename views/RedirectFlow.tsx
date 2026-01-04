@@ -207,7 +207,10 @@ const RedirectFlow: React.FC<RedirectFlowProps> = ({ settings, currentUser }) =>
            </div>
 
            {flowState === 'counting' && (
-             <div className="animate-in space-y-8">
+             <div className="animate-in space-y-8 flex flex-col items-center">
+               {/* SHOW ADS DURING COUNTDOWN WHEN BUTTON IS NOT SHOWING */}
+               <AdSlot html={activeSettings.adSlots.top} className="mb-8 w-full" />
+               
                <div className="flex justify-center">
                   <div className="p-8 bg-white/5 rounded-xl border border-white/10">
                     <Lock className="w-12 h-12 text-indigo-400 animate-pulse" />
@@ -215,14 +218,14 @@ const RedirectFlow: React.FC<RedirectFlowProps> = ({ settings, currentUser }) =>
                </div>
                <h3 className="text-xl font-black uppercase tracking-tight text-white">Validating Relay Parameters...</h3>
                <p className="text-[10px] text-slate-500 font-black uppercase tracking-widest">Handshake Progress ({Math.ceil((1 - progress/100) * activeSettings.redirectDelay)}s)</p>
+               
+               <AdSlot html={activeSettings.adSlots.bottom} className="mt-8 w-full" />
              </div>
            )}
 
            {flowState === 'verifying' && (
              <div className="animate-in flex flex-col items-center w-full">
-                {/* AD ABOVE VERIFY BUTTON */}
-                <AdSlot html={activeSettings.adSlots.top} className="mb-10 w-full" />
-                
+                {/* HIDE BIG ADS WHEN BUTTON IS SHOWING - PER USER REQUEST */}
                 <div className="my-6 w-full">
                   <button 
                     onClick={handleVerify} 
@@ -231,9 +234,6 @@ const RedirectFlow: React.FC<RedirectFlowProps> = ({ settings, currentUser }) =>
                     <Unlock className="w-6 h-6 mr-4 group-hover:rotate-12 transition-transform" /> Authorize Phase {currentStep}
                   </button>
                 </div>
-
-                {/* AD BELOW VERIFY BUTTON */}
-                <AdSlot html={activeSettings.adSlots.bottom} className="mt-10 w-full" />
              </div>
            )}
 
@@ -267,9 +267,7 @@ const RedirectFlow: React.FC<RedirectFlowProps> = ({ settings, currentUser }) =>
                 {isFinalStep ? 'RELAY READY' : `STEP ${currentStep} DONE`}
               </h2>
 
-              {/* AD ABOVE FINAL BUTTON */}
-              <AdSlot html={activeSettings.adSlots.middle} className="mb-12 w-full" />
-
+              {/* HIDE BIG ADS WHEN FINAL BUTTON IS SHOWING - PER USER REQUEST */}
               <div className="my-8 w-full">
                 <button 
                   onClick={handleNextAction} 
@@ -282,9 +280,6 @@ const RedirectFlow: React.FC<RedirectFlowProps> = ({ settings, currentUser }) =>
                   </span>
                 </button>
               </div>
-
-              {/* AD BELOW FINAL BUTTON */}
-              <AdSlot html={activeSettings.adSlots.bottom} className="mt-12 w-full" />
             </div>
           ) : (
             <div className="opacity-20 flex flex-col items-center pointer-events-none grayscale blur-[1px]">
