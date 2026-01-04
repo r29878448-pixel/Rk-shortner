@@ -7,7 +7,7 @@ const USER_AD_CODE_1 = `
 `;
 
 const USER_AD_CODE_2 = `
-<div style="display:flex; justify-content:center;">
+<div style="display:flex; justify-content:center; margin: 20px 0;">
 <script>
   atOptions = {
     'key' : '3980b1017b92901b3bbbb650fbd73b7e',
@@ -31,8 +31,8 @@ export const DEFAULT_SETTINGS: SiteSettings = {
     contentAds: [USER_AD_CODE_2, USER_AD_CODE_1]
   },
   stepAds: [],
-  redirectDelay: 15,
-  totalSteps: 2, // Default to 2 pages as requested
+  redirectDelay: 10,
+  totalSteps: 2, 
   planConfig: {
     freeLimit: 1000000,
     proLimit: 1000000,
@@ -44,41 +44,33 @@ export const DEFAULT_SETTINGS: SiteSettings = {
   cpmRate: 150 
 };
 
-const generateEndlessContent = (topic: string, count: number = 20) => {
-  const segment = `
-Digital infrastructure and the architecture of link management are evolving at a breakneck pace in 2026. When we analyze the telemetry of modern ${topic}, we see a clear distinction between legacy systems and high-performance verification relays. This deep-dive analysis serves to educate the user on the complexities of secure data transmission and why multi-step protocols are the new gold standard for enterprise security.
-
-In a global economy driven by clicks, the integrity of a redirect is as important as the content itself. Our behavioral engine counteracts this by measuring scroll velocity, interaction patterns, and mouse movement. By providing this high-quality, long-form content, we create a human-centric environment that filters out automated traffic. 
-  `;
-  return segment.repeat(count);
+const generateContent = (topic: string) => {
+  return `
+    Security is paramount in digital link management. When dealing with ${topic}, verifying user sessions through multi-stage gateways is the most effective way to prevent automated bot traffic. This ensure that publishers receive high-quality engagements that translate to sustainable revenue.
+    
+    In 2026, the redirection landscape has shifted. Users expect transparency and speed, even while verification protocols are running. By providing educational content during these brief delays, we bridge the gap between necessary security and user engagement.
+    
+    The architecture of our relay nodes allows for seamless transitions between verification steps. Each page load performs a unique handshake, ensuring the session remains untainted. This multi-page approach is what separates enterprise-level link infrastructure from basic shortening services.
+  `.repeat(8);
 };
 
 export const DEMO_POSTS: BlogPost[] = [
   {
     id: '1',
-    title: 'The Evolution of Secure Data Relays',
-    excerpt: 'Detailed analysis of high-performance redirection networks and their security protocols.',
-    content: generateEndlessContent('Monetization Frameworks'),
-    author: 'Security Node',
+    title: 'Understanding Multi-Stage Verification',
+    excerpt: 'Deep dive into why multi-step gateways are essential for modern link infrastructure.',
+    content: generateContent('Network Security'),
+    author: 'System Admin',
     date: 'Oct 24, 2025',
-    imageUrl: 'https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&fit=crop&q=80&w=800'
-  },
-  {
-    id: '2',
-    title: 'Global Traffic Filtering Strategies',
-    excerpt: 'How multi-stage verification preserves advertiser value and publisher integrity.',
-    content: generateEndlessContent('Traffic Verification'),
-    author: 'Network Admin',
-    date: 'Nov 02, 2025',
     imageUrl: 'https://images.unsplash.com/photo-1550751827-4bd374c3f58b?auto=format&fit=crop&q=80&w=800'
   },
   {
-    id: '3',
-    title: 'Behavioral Heuristics in 2026',
-    excerpt: 'Using mouse movement and scroll depth to authenticate user sessions in real-time.',
-    content: generateEndlessContent('Heuristic Analysis'),
-    author: 'System Architect',
-    date: 'Dec 15, 2025',
-    imageUrl: 'https://images.unsplash.com/photo-1558494949-ef010cbdcc51?auto=format&fit=crop&q=80&w=800'
+    id: '2',
+    title: 'Optimizing Link Monetization',
+    excerpt: 'Strategies for maximizing your earnings through high-quality traffic redirects.',
+    content: generateContent('Monetization'),
+    author: 'Finance Node',
+    date: 'Nov 02, 2025',
+    imageUrl: 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&q=80&w=800'
   }
 ];

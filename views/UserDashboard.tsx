@@ -3,9 +3,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
   Link as LinkIcon, 
-  Copy, 
   Check, 
-  BarChart3, 
   Plus, 
   TrendingUp,
   Wallet,
@@ -44,64 +42,61 @@ const UserDashboard: React.FC<UserDashboardProps> = ({ user }) => {
     <div className="max-w-7xl mx-auto px-6 py-12 md:py-20">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-12 gap-8">
         <div>
-          <h1 className="text-4xl font-black text-slate-900 uppercase tracking-tighter">Publisher Terminal</h1>
-          <p className="text-slate-400 text-[10px] font-black uppercase tracking-[0.4em] mt-2">Active Link Node</p>
+          <h1 className="text-4xl font-black text-slate-900 uppercase tracking-tighter">Publisher Panel</h1>
+          <p className="text-slate-400 text-[10px] font-black uppercase tracking-[0.4em] mt-2">Active Link Relay Station</p>
         </div>
         <div className="flex gap-4">
-          <button onClick={() => window.open(settings.telegramBotUrl, '_blank')} className="flex items-center px-8 py-4 bg-slate-900 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-xl">
+          <button onClick={() => window.open(settings.telegramBotUrl, '_blank')} className="flex items-center px-8 py-4 bg-slate-900 text-white rounded-xl text-[10px] font-black uppercase tracking-widest shadow-xl">
             <Wallet className="w-5 h-5 mr-3" /> Withdraw ₹{totalEarnings.toFixed(2)}
           </button>
-          <button onClick={() => navigate('/')} className="flex items-center px-8 py-4 bg-indigo-600 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-xl">
-            <Plus className="w-5 h-5 mr-3" /> New Relay
+          <button onClick={() => navigate('/')} className="flex items-center px-8 py-4 bg-indigo-600 text-white rounded-xl text-[10px] font-black uppercase tracking-widest shadow-xl">
+            <Plus className="w-5 h-5 mr-3" /> New Link
           </button>
         </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
-        <div className="bg-white p-8 rounded-[2rem] border border-slate-200 shadow-sm">
+        <div className="bg-white p-8 rounded-xl border border-slate-200 shadow-sm">
            <p className="text-[10px] font-black uppercase text-slate-400 mb-2 tracking-widest">Global Earnings</p>
            <h3 className="text-3xl font-black text-slate-900">₹{totalEarnings.toFixed(2)}</h3>
-           <div className="mt-4 flex items-center text-green-500 text-[9px] font-bold uppercase tracking-widest">
-             <TrendingUp className="w-3 h-3 mr-1" /> System tracking online
-           </div>
         </div>
-        <div className="bg-white p-8 rounded-[2rem] border border-slate-200 shadow-sm">
-           <p className="text-[10px] font-black uppercase text-slate-400 mb-2 tracking-widest">Total Hits</p>
+        <div className="bg-white p-8 rounded-xl border border-slate-200 shadow-sm">
+           <p className="text-[10px] font-black uppercase text-slate-400 mb-2 tracking-widest">Total Relay Hits</p>
            <h3 className="text-3xl font-black text-slate-900">{links.reduce((s, l) => s + (l.clicks || 0), 0)}</h3>
         </div>
-        <div className="bg-white p-8 rounded-[2rem] border border-slate-200 shadow-sm">
-           <p className="text-[10px] font-black uppercase text-slate-400 mb-2 tracking-widest">Account Status</p>
+        <div className="bg-white p-8 rounded-xl border border-slate-200 shadow-sm">
+           <p className="text-[10px] font-black uppercase text-slate-400 mb-2 tracking-widest">Network Status</p>
            <h3 className="text-3xl font-black text-indigo-600 uppercase tracking-tighter">Verified</h3>
         </div>
       </div>
 
-      <div className="bg-white rounded-[3rem] border border-slate-200 shadow-sm overflow-hidden">
-        <div className="p-10 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
+      <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+        <div className="p-8 border-b border-slate-100 flex items-center justify-between bg-slate-50">
            <h2 className="text-xl font-black text-slate-900 uppercase tracking-tight">Active Relays</h2>
-           <Globe className="w-6 h-6 text-slate-200" />
+           <Globe className="w-5 h-5 text-slate-300" />
         </div>
         <div className="overflow-x-auto">
           {links.length > 0 ? (
             <table className="w-full text-left">
               <thead>
                 <tr className="text-[10px] font-black uppercase tracking-widest text-slate-400 bg-slate-50 border-b border-slate-100">
-                  <th className="px-10 py-6">Link</th>
+                  <th className="px-10 py-6">Relay Path</th>
                   <th className="px-10 py-6">Hits</th>
-                  <th className="px-10 py-6">Earning</th>
+                  <th className="px-10 py-6">Earnings</th>
                   <th className="px-10 py-6 text-right">Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-50">
+              <tbody className="divide-y divide-slate-100">
                 {links.map(link => (
                   <tr key={link.id} className="hover:bg-slate-50 transition-colors">
                     <td className="px-10 py-8">
-                      <p className="text-indigo-600 font-black text-lg">/s/{link.shortCode}</p>
-                      <p className="text-[9px] text-slate-400 font-mono truncate max-w-[150px]">{link.originalUrl}</p>
+                      <p className="text-indigo-600 font-black text-base">/s/{link.shortCode}</p>
+                      <p className="text-[9px] text-slate-400 font-mono truncate max-w-[200px]">{link.originalUrl}</p>
                     </td>
-                    <td className="px-10 py-8 font-black text-slate-900 text-xl">{link.clicks || 0}</td>
-                    <td className="px-10 py-8 font-black text-green-600 text-xl">₹{(link.earnings || 0).toFixed(2)}</td>
+                    <td className="px-10 py-8 font-black text-slate-900">{link.clicks || 0}</td>
+                    <td className="px-10 py-8 font-black text-green-600">₹{(link.earnings || 0).toFixed(2)}</td>
                     <td className="px-10 py-8 text-right flex justify-end">
-                      <button onClick={() => handleCopy(`${window.location.origin + window.location.pathname.split('#')[0]}#/s/${link.shortCode}`, link.id)} className="p-3 bg-white border border-slate-100 rounded-xl text-slate-400 hover:text-indigo-600">
+                      <button onClick={() => handleCopy(`${window.location.origin + window.location.pathname.split('#')[0]}#/s/${link.shortCode}`, link.id)} className="p-3 bg-white border border-slate-200 rounded-xl text-slate-400 hover:text-indigo-600 transition shadow-sm">
                         {copyStatus[link.id] ? <Check className="w-5 h-5" /> : <LinkIcon className="w-5 h-5" />}
                       </button>
                     </td>
