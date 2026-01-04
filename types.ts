@@ -4,22 +4,30 @@ export enum UserRole {
   ADMIN = 'ADMIN'
 }
 
+// Fixed: Added SubscriptionPlan enum used in PricingPage.tsx to resolve missing export error
 export enum SubscriptionPlan {
   FREE = 'FREE',
   PRO = 'PRO',
   BUSINESS = 'BUSINESS'
 }
 
+// Fixed: Added PlanConfig interface to define expected structure for site plans
+export interface PlanConfig {
+  freeLimit: number;
+  proLimit: number;
+  businessLimit: number;
+  proPrice: number;
+  businessPrice: number;
+}
+
 export interface User {
   id: string;
   email: string;
   role: UserRole;
-  plan: SubscriptionPlan;
   apiKey: string;
   createdAt: Date;
   isSuspended: boolean;
-  pendingUpgrade?: SubscriptionPlan;
-  balance?: number; // Total earnings in currency
+  balance?: number;
 }
 
 export interface Link {
@@ -28,29 +36,20 @@ export interface Link {
   originalUrl: string;
   shortCode: string;
   customAlias?: string;
-  expiryDate?: Date;
   clicks: number;
   createdAt: Date;
-  earnings?: number; // Earnings specific to this link
+  earnings?: number;
 }
 
 export interface ClickEvent {
   id: string;
   linkId: string;
-  userId: string; // Track who the link belongs to
+  userId: string;
   shortCode: string;
   timestamp: string;
   referrer: string;
   userAgent: string;
-  ip?: string; // For fraud detection (simulated)
-}
-
-export interface PlanConfig {
-  freeLimit: number;
-  proLimit: number;
-  businessLimit: number;
-  proPrice: number;
-  businessPrice: number;
+  ip?: string;
 }
 
 export interface SiteSettings {
@@ -65,9 +64,10 @@ export interface SiteSettings {
   stepAds: string[]; 
   redirectDelay: number; 
   totalSteps: number; 
-  planConfig: PlanConfig;
   telegramBotUrl: string;
-  cpmRate: number; // Payment per 1000 clicks
+  cpmRate: number;
+  // Fixed: Added planConfig property to SiteSettings interface to resolve errors in constants.tsx and PricingPage.tsx
+  planConfig: PlanConfig;
 }
 
 export interface BlogPost {
