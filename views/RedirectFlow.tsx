@@ -157,47 +157,47 @@ const RedirectFlow: React.FC<RedirectFlowProps> = ({ settings, currentUser }) =>
           <Globe className="text-white w-6 h-6 animate-pulse" />
         </div>
         <Loader2 className="w-8 h-8 text-indigo-600 animate-spin mb-4" />
-        <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">VP Links Protocol {currentStep}/{totalSteps}</p>
+        <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">{activeSettings.siteName} Protocol {currentStep}/{totalSteps}</p>
       </div>
     </div>
   );
 
   if (error) return (
     <div className="min-h-screen flex items-center justify-center bg-slate-900 p-6 text-center">
-      <div className="bg-white/5 border border-white/10 p-12 rounded-xl max-w-md backdrop-blur-3xl">
+      <div className="bg-white/5 border border-white/10 p-12 rounded-xl max-w-md backdrop-blur-3xl shadow-2xl">
         <ShieldAlert className="w-16 h-16 text-red-500 mx-auto mb-8" />
-        <h2 className="text-2xl font-black mb-4 uppercase text-white tracking-tighter">Connection Failed</h2>
+        <h2 className="text-2xl font-black mb-4 uppercase text-white tracking-tighter">Connection Fault</h2>
         <p className="text-xs text-slate-400 font-bold mb-10 leading-relaxed uppercase tracking-widest">{error}</p>
-        <button onClick={() => navigate('/')} className="block w-full py-5 bg-white text-slate-900 rounded-xl font-black uppercase text-[10px] tracking-widest active:scale-95">Home Station</button>
+        <button onClick={() => navigate('/')} className="block w-full py-5 bg-white text-slate-900 rounded-xl font-black uppercase text-[10px] tracking-widest active:scale-95 transition">Exit Terminal</button>
       </div>
     </div>
   );
 
   return (
     <div className="min-h-screen bg-white text-slate-900 font-sans pb-40">
-      <AdSlot html={activeSettings.adSlots.top} className="py-4 bg-slate-50 border-b" />
+      <AdSlot html={activeSettings.adSlots.top} className="py-4 bg-slate-50 border-b border-slate-100" />
       
-      <div className="sticky top-0 z-[100] w-full bg-slate-900 text-white px-8 py-5 flex justify-between items-center shadow-lg border-b border-white/5">
+      <div className="sticky top-0 z-[100] w-full bg-slate-900 text-white px-8 py-5 flex justify-between items-center shadow-lg border-b border-white/10">
         <div className="flex items-center space-x-3 text-indigo-400">
           <div className="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center">
             <Globe className="text-white w-4 h-4" />
           </div>
-          <span className="text-[10px] font-black uppercase tracking-[0.3em]">VP LINKS • STEP {currentStep} / {totalSteps}</span>
+          <span className="text-[10px] font-black uppercase tracking-[0.3em]">{activeSettings.siteName.toUpperCase()} • STEP {currentStep} / {totalSteps}</span>
         </div>
         <div className="text-[10px] font-black uppercase tracking-widest text-slate-500">
-          {flowState === 'ready' ? 'SECURE' : 'PROCESSING'}
+          {flowState === 'ready' ? 'SECURE_GATEWAY' : 'AUTHENTICATING'}
         </div>
       </div>
 
       <div className="max-w-4xl mx-auto px-6 pt-20">
         <div className="text-center mb-16">
           <h1 className="text-4xl md:text-6xl font-black mb-8 tracking-tighter uppercase leading-[0.9] text-balance">
-            {isFinalStep ? 'The Destination is Ready' : post.title}
+            {isFinalStep ? 'Relay Connection Initialized' : post.title}
           </h1>
           <div className="flex items-center justify-center space-x-4 text-[10px] font-black uppercase tracking-[0.4em] text-slate-400">
-             <span>{activeSettings.siteName} Relay</span>
+             <span>{activeSettings.siteName} Protocol</span>
              <span className="w-1.5 h-1.5 bg-indigo-500 rounded-full"></span>
-             <span>Ref: {shortCode}</span>
+             <span>Link Ref: {shortCode}</span>
           </div>
         </div>
 
@@ -213,14 +213,14 @@ const RedirectFlow: React.FC<RedirectFlowProps> = ({ settings, currentUser }) =>
                     <Lock className="w-12 h-12 text-indigo-400 animate-pulse" />
                   </div>
                </div>
-               <h3 className="text-xl font-black uppercase tracking-tight text-white">Establishing Secure Node...</h3>
-               <p className="text-[10px] text-slate-500 font-black uppercase tracking-widest">Verifying Identity ({Math.ceil((1 - progress/100) * activeSettings.redirectDelay)}s)</p>
+               <h3 className="text-xl font-black uppercase tracking-tight text-white">Validating Relay Parameters...</h3>
+               <p className="text-[10px] text-slate-500 font-black uppercase tracking-widest">Handshake Progress ({Math.ceil((1 - progress/100) * activeSettings.redirectDelay)}s)</p>
              </div>
            )}
 
            {flowState === 'verifying' && (
              <div className="animate-in flex flex-col items-center w-full">
-                {/* STRICT AD PLACEMENT: ABOVE BUTTON */}
+                {/* AD ABOVE VERIFY BUTTON */}
                 <AdSlot html={activeSettings.adSlots.top} className="mb-10 w-full" />
                 
                 <div className="my-6 w-full">
@@ -228,11 +228,11 @@ const RedirectFlow: React.FC<RedirectFlowProps> = ({ settings, currentUser }) =>
                     onClick={handleVerify} 
                     className="w-full max-w-md py-10 bg-indigo-600 text-white rounded-xl font-black uppercase text-base tracking-[0.2em] shadow-[0_25px_50px_-12px_rgba(79,70,229,0.5)] hover:bg-indigo-700 transition-all active:scale-95 flex items-center justify-center mx-auto group"
                   >
-                    <Unlock className="w-6 h-6 mr-4 group-hover:rotate-12 transition-transform" /> Verify Step {currentStep}
+                    <Unlock className="w-6 h-6 mr-4 group-hover:rotate-12 transition-transform" /> Authorize Phase {currentStep}
                   </button>
                 </div>
 
-                {/* STRICT AD PLACEMENT: BELOW BUTTON */}
+                {/* AD BELOW VERIFY BUTTON */}
                 <AdSlot html={activeSettings.adSlots.bottom} className="mt-10 w-full" />
              </div>
            )}
@@ -242,9 +242,9 @@ const RedirectFlow: React.FC<RedirectFlowProps> = ({ settings, currentUser }) =>
                 <div className="w-20 h-20 bg-green-500/10 rounded-xl mx-auto flex items-center justify-center border border-green-500/20 shadow-xl shadow-green-500/5">
                    <Unlock className="w-10 h-10 text-green-500" />
                 </div>
-                <h3 className="text-xl font-black uppercase tracking-tight text-green-400">Verification Success</h3>
+                <h3 className="text-xl font-black uppercase tracking-tight text-green-400">Step Authenticated</h3>
                 <div className="flex flex-col items-center text-indigo-400 animate-bounce">
-                  <p className="text-[10px] font-black uppercase tracking-widest mb-4 opacity-50">Scroll down to continue</p>
+                  <p className="text-[10px] font-black uppercase tracking-widest mb-4 opacity-50">Proceed below</p>
                   <ChevronDown className="w-10 h-10" />
                 </div>
              </div>
@@ -253,7 +253,7 @@ const RedirectFlow: React.FC<RedirectFlowProps> = ({ settings, currentUser }) =>
 
         <div className="prose prose-xl max-w-none text-slate-700 text-justify space-y-12 leading-relaxed mb-40">
           <p className="text-2xl font-black text-slate-900 border-l-[10px] border-indigo-600 pl-8 italic py-4 bg-slate-50 rounded-r-xl uppercase tracking-tighter">
-            "Step {currentStep} Authorized. Node {shortCode} handshake confirmed."
+            "Network Node {shortCode}: Handshake sequence {currentStep} established successfully."
           </p>
           <div className="whitespace-pre-line text-lg font-medium text-slate-500 leading-relaxed">
             {post.content}
@@ -264,10 +264,10 @@ const RedirectFlow: React.FC<RedirectFlowProps> = ({ settings, currentUser }) =>
           {flowState === 'ready' ? (
             <div className="animate-in flex flex-col items-center w-full">
               <h2 className="text-5xl md:text-8xl font-black text-slate-900 tracking-tighter uppercase mb-16 leading-[0.8] text-balance">
-                {isFinalStep ? 'VP LINKS READY' : `STEP ${currentStep} COMPLETE`}
+                {isFinalStep ? 'RELAY READY' : `STEP ${currentStep} DONE`}
               </h2>
 
-              {/* STRICT AD PLACEMENT: ABOVE FINAL BUTTON */}
+              {/* AD ABOVE FINAL BUTTON */}
               <AdSlot html={activeSettings.adSlots.middle} className="mb-12 w-full" />
 
               <div className="my-8 w-full">
@@ -277,24 +277,24 @@ const RedirectFlow: React.FC<RedirectFlowProps> = ({ settings, currentUser }) =>
                 >
                   <div className="absolute inset-0 bg-white/5 -translate-x-full group-hover:translate-x-full transition-transform duration-700"></div>
                   <span className="relative z-10 flex items-center">
-                    {isFinalStep ? 'Go to Destination' : `Continue to Step ${currentStep + 1}`} 
+                    {isFinalStep ? 'Access Final Destination' : `Initialise Step ${currentStep + 1}`} 
                     <ArrowRight className="ml-8 w-10 h-10 group-hover:translate-x-4 transition-transform" />
                   </span>
                 </button>
               </div>
 
-              {/* STRICT AD PLACEMENT: BELOW FINAL BUTTON */}
+              {/* AD BELOW FINAL BUTTON */}
               <AdSlot html={activeSettings.adSlots.bottom} className="mt-12 w-full" />
             </div>
           ) : (
             <div className="opacity-20 flex flex-col items-center pointer-events-none grayscale blur-[1px]">
                <Lock className="w-16 h-16 mb-8 text-slate-400" />
-               <p className="text-[14px] font-black uppercase tracking-[0.5em] text-slate-400">Locked Node Protocol</p>
+               <p className="text-[14px] font-black uppercase tracking-[0.5em] text-slate-400">Node Status: Restricted</p>
             </div>
           )}
         </div>
       </div>
-      <AdSlot html={activeSettings.adSlots.bottom} className="mt-40 border-t py-12" />
+      <AdSlot html={activeSettings.adSlots.bottom} className="mt-40 border-t border-slate-100 py-12" />
     </div>
   );
 };

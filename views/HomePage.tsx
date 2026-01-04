@@ -1,7 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-// Added ArrowRight to imports to fix "Cannot find name 'ArrowRight'" error on line 87
 import { Copy, Check, Loader2, Zap, Globe, Cpu, Shield, ArrowRight } from 'lucide-react';
 import { Link as LinkType, SiteSettings, User } from '../types.ts';
 
@@ -64,19 +63,19 @@ const HomePage: React.FC<HomePageProps> = ({ settings, currentUser: initialUser 
     <div className="bg-white min-h-[80vh] flex flex-col justify-center py-12 px-6">
       <div className="max-w-4xl mx-auto text-center">
         <div className="inline-flex items-center space-x-3 bg-indigo-50 text-indigo-600 px-6 py-3 rounded-xl text-[11px] font-black uppercase tracking-[0.25em] mb-12 shadow-sm border border-indigo-100">
-          <Globe className="w-5 h-5" /> <span>VP LINKS GLOBAL NODE</span>
+          <Globe className="w-5 h-5" /> <span>{settings.siteName.toUpperCase()} GLOBAL RELAY</span>
         </div>
         
         <h1 className="text-6xl md:text-9xl font-black text-slate-900 tracking-tighter mb-10 uppercase leading-[0.8] text-balance">
-          Link <br /> <span className="text-indigo-600">Infrastructure.</span>
+          Manage <br /> <span className="text-indigo-600">Infrastructure.</span>
         </h1>
         
-        <p className="text-slate-400 font-bold uppercase tracking-[0.5em] text-[12px] mb-16">Enterprise Redirection & Monetization</p>
+        <p className="text-slate-400 font-bold uppercase tracking-[0.5em] text-[12px] mb-16">Enterprise Link Redirection & Scaling</p>
         
         <form onSubmit={handleShorten} className="bg-white p-3 border border-slate-200 flex flex-col md:flex-row gap-4 max-w-2xl mx-auto mb-24 shadow-2xl rounded-xl transition-all focus-within:border-indigo-500">
           <input 
             type="url" 
-            placeholder="Destination URL (https://...)" 
+            placeholder="Target Destination (https://...)" 
             className="flex-grow px-8 py-6 bg-slate-50 border-none rounded-xl focus:ring-0 font-bold text-slate-700 placeholder:text-slate-300"
             value={url}
             onChange={(e) => setUrl(e.target.value)}
@@ -94,7 +93,7 @@ const HomePage: React.FC<HomePageProps> = ({ settings, currentUser: initialUser 
         {shortenedLink && (
           <div className="bg-slate-900 p-10 rounded-xl text-white flex flex-col md:flex-row items-center justify-between gap-8 max-w-2xl mx-auto animate-in border border-white/10 shadow-[0_40px_80px_-20px_rgba(0,0,0,0.5)]">
             <div className="text-left overflow-hidden w-full">
-              <p className="text-[10px] font-black uppercase tracking-[0.4em] text-indigo-400 mb-4">Relay Endpoint Active</p>
+              <p className="text-[10px] font-black uppercase tracking-[0.4em] text-indigo-400 mb-4">Relay Protocol Active</p>
               <div className="bg-white/5 p-6 rounded-xl border border-white/10">
                 <span className="text-base font-mono truncate block text-indigo-100/90">
                   {window.location.origin + window.location.pathname.split('#')[0]}#/s/{shortenedLink.shortCode}
@@ -109,8 +108,8 @@ const HomePage: React.FC<HomePageProps> = ({ settings, currentUser: initialUser 
         )}
 
         <div className="mt-32 flex flex-col md:flex-row justify-center items-center gap-16 opacity-40">
-           <div className="flex items-center space-x-4"><Cpu className="w-6 h-6" /> <span className="text-[10px] font-black uppercase tracking-widest">Latency Optimization</span></div>
-           <div className="flex items-center space-x-4"><Shield className="w-6 h-6" /> <span className="text-[10px] font-black uppercase tracking-widest">AES-256 Protocol</span></div>
+           <div className="flex items-center space-x-4"><Cpu className="w-6 h-6" /> <span className="text-[10px] font-black uppercase tracking-widest">Global Telemetry</span></div>
+           <div className="flex items-center space-x-4"><Shield className="w-6 h-6" /> <span className="text-[10px] font-black uppercase tracking-widest">Secure Handshake</span></div>
         </div>
       </div>
     </div>
