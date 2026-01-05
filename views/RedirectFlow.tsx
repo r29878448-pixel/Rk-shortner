@@ -12,7 +12,7 @@ import {
   Globe
 } from 'lucide-react';
 import { SiteSettings, ClickEvent, Link, User, UserRole, BlogPost } from '../types.ts';
-import { DEMO_POSTS, DEFAULT_SETTINGS } from '../constants.tsx';
+import { DEMO_POSTS } from '../constants.tsx';
 import AdSlot from '../components/AdSlot.tsx';
 
 interface RedirectFlowProps {
@@ -70,7 +70,6 @@ const RedirectFlow: React.FC<RedirectFlowProps> = ({ settings, currentUser }) =>
     setProgress(0);
     window.scrollTo({ top: 0, behavior: 'smooth' });
     
-    // Simulated network verification delay
     setTimeout(() => {
       setLoading(false);
       setFlowState('counting');
@@ -151,7 +150,6 @@ const RedirectFlow: React.FC<RedirectFlowProps> = ({ settings, currentUser }) =>
     window.location.href = targetUrl;
   };
 
-  // Immediate Ads during Loading
   if (loading) return (
     <div className="min-h-screen bg-white">
       <AdSlot html={activeSettings.adSlots.top} className="py-4 bg-slate-50 border-b border-slate-100" />
@@ -179,7 +177,6 @@ const RedirectFlow: React.FC<RedirectFlowProps> = ({ settings, currentUser }) =>
 
   return (
     <div className="min-h-screen bg-white text-slate-900 font-sans pb-40">
-      {/* PERSISTENT HEADER AD */}
       <AdSlot html={activeSettings.adSlots.top} className="py-4 bg-slate-50 border-b border-slate-100" />
       
       <div className="sticky top-0 z-[100] w-full bg-slate-900 text-white px-8 py-5 flex justify-between items-center shadow-lg border-b border-white/10">
@@ -208,11 +205,6 @@ const RedirectFlow: React.FC<RedirectFlowProps> = ({ settings, currentUser }) =>
                 style={{ width: `${progress}%` }}
               />
             </div>
-            <p className="text-[10px] font-black uppercase tracking-[0.4em] text-slate-400">
-              {flowState === 'counting' ? `Estimated Time: ${Math.ceil((activeSettings.redirectDelay * (100 - progress)) / 100)}s` : 
-               flowState === 'verifying' ? 'Establishing Secure Handshake' : 
-               flowState === 'ready' ? 'Connection Finalized' : 'Initializing Relay'}
-            </p>
           </div>
         </div>
 
@@ -234,35 +226,28 @@ const RedirectFlow: React.FC<RedirectFlowProps> = ({ settings, currentUser }) =>
           <div className="space-y-8">
             <div className="bg-slate-50 p-8 rounded-2xl border border-slate-100">
               <h4 className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-6">Security Protocol</h4>
-              <div className="space-y-4">
-                <div className="flex items-center text-xs font-bold uppercase tracking-widest text-slate-700">
-                  <ShieldCheck className="w-4 h-4 mr-3 text-green-500" /> SSL Encryption
-                </div>
-                <div className="flex items-center text-xs font-bold uppercase tracking-widest text-slate-700">
-                  <Lock className="w-4 h-4 mr-3 text-indigo-500" /> Node Relay Verified
-                </div>
+              <div className="space-y-4 text-xs font-bold uppercase tracking-widest text-slate-700">
+                <div className="flex items-center"><ShieldCheck className="w-4 h-4 mr-3 text-green-500" /> SSL Encryption</div>
+                <div className="flex items-center"><Lock className="w-4 h-4 mr-3 text-indigo-500" /> Node Relay Verified</div>
               </div>
             </div>
             
             {flowState === 'verifying' && (
               <div className="space-y-6 animate-in">
-                {/* AD ABOVE BUTTON */}
-                <AdSlot html={activeSettings.adSlots.top} className="mb-4" />
+                <AdSlot html={activeSettings.adSlots.top} className="rounded-xl overflow-hidden" />
                 <button 
                   onClick={handleVerify}
                   className="w-full py-8 bg-indigo-600 text-white rounded-2xl font-black uppercase text-sm tracking-[0.2em] shadow-2xl hover:bg-indigo-700 transition-all flex items-center justify-center animate-bounce"
                 >
                   Verify & Continue <ChevronDown className="ml-3 w-5 h-5" />
                 </button>
-                {/* AD BELOW BUTTON */}
-                <AdSlot html={activeSettings.adSlots.bottom} className="mt-4" />
+                <AdSlot html={activeSettings.adSlots.bottom} className="rounded-xl overflow-hidden" />
               </div>
             )}
 
             {flowState === 'ready' && (
               <div ref={bottomRef} className="space-y-6 animate-in">
-                {/* AD ABOVE FINAL BUTTON */}
-                <AdSlot html={activeSettings.adSlots.top} className="mb-4" />
+                <AdSlot html={activeSettings.adSlots.top} className="rounded-xl overflow-hidden" />
                 <button 
                   onClick={handleNextAction}
                   className="w-full py-8 bg-slate-900 text-white rounded-2xl font-black uppercase text-sm tracking-[0.2em] shadow-2xl hover:bg-black transition-all flex items-center justify-center group"
@@ -270,16 +255,14 @@ const RedirectFlow: React.FC<RedirectFlowProps> = ({ settings, currentUser }) =>
                   {isFinalStep ? 'Final Destination' : `Proceed to Step ${currentStep + 1}`}
                   <ArrowRight className="ml-3 w-5 h-5 group-hover:translate-x-2 transition-transform" />
                 </button>
-                {/* AD BELOW FINAL BUTTON */}
-                <AdSlot html={activeSettings.adSlots.bottom} className="mt-4" />
-                <p className="text-[9px] text-center font-black uppercase tracking-widest text-slate-400">Secure relay path authenticated</p>
+                <AdSlot html={activeSettings.adSlots.bottom} className="rounded-xl overflow-hidden" />
               </div>
             )}
           </div>
         </div>
       </div>
 
-      <AdSlot html={activeSettings.adSlots.bottom} className="fixed bottom-0 left-0 right-0 py-4 bg-white border-t border-slate-100 z-50 shadow-[0_-10px_40px_rgba(0,0,0,0.05)]" />
+      <AdSlot html={activeSettings.adSlots.bottom} className="fixed bottom-0 left-0 right-0 py-4 bg-white border-t border-slate-100 z-50 shadow-lg" />
     </div>
   );
 };

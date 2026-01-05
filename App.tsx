@@ -4,12 +4,8 @@ import { HashRouter, Routes, Route, Link as RouterLink, useLocation, useNavigate
 import { 
   Link as LinkIcon,
   Menu,
-  X,
   Shield,
-  Terminal,
-  Cpu,
   ChevronLeft,
-  Wallet,
   Globe,
   Code,
   Copy,
@@ -35,30 +31,29 @@ const ApiHandler = () => {
   const [isResultCopied, setIsResultCopied] = useState(false);
   const [isKeyCopied, setIsKeyCopied] = useState(false);
   const [isUrlCopied, setIsUrlCopied] = useState(false);
-  const [user, setUser] = useState<User | null>(null);
+  const [sessionUser, setSessionUser] = useState<User | null>(null);
 
   useEffect(() => {
+    // For UI display, get the logged-in user
     const storedUserString = localStorage.getItem('swiftlink_user');
-    const currentUser = storedUserString ? JSON.parse(storedUserString) : null;
-    setUser(currentUser);
+    setSessionUser(storedUserString ? JSON.parse(storedUserString) : null);
 
     const params = new URLSearchParams(location.search);
-    const api = params.get('api');
-    const url = params.get('url');
+    const apiToken = params.get('api');
+    const targetUrl = params.get('url');
 
-    if (!api && !url) return;
+    if (!apiToken || !targetUrl) return;
 
-    if (api && url) {
-      if (!currentUser || currentUser.apiKey !== api) {
-        setError('AUTH_ERROR: Invalid API Token provided in request.');
-        return;
-      }
+    // AUTH LOGIC: Search "database" for user matching this token
+    const allRegistered = JSON.parse(localStorage.getItem('swiftlink_registered_users') || '[]');
+    const matchingUser = allRegistered.find((u: any) => u.profile.apiKey === apiToken);
 
+    if (matchingUser) {
       const shortCode = Math.random().toString(36).substring(2, 9);
       const newLink = {
         id: Math.random().toString(36).substring(7),
-        userId: currentUser.id,
-        originalUrl: url,
+        userId: matchingUser.profile.id,
+        originalUrl: targetUrl,
         shortCode,
         clicks: 0,
         earnings: 0,
@@ -71,20 +66,20 @@ const ApiHandler = () => {
       const finalResult = `${baseUrl}#/s/${shortCode}`;
       setResult(finalResult);
     } else {
-      setError('PARAM_ERROR: both "api" and "url" are required in the GET request.');
+      setError('AUTH_ERROR: Invalid API Token. Ensure you are using your Secret Key.');
     }
-  }, [location, navigate]);
+  }, [location]);
 
   const copyKey = () => {
-    if (user?.apiKey) {
-      navigator.clipboard.writeText(user.apiKey);
+    if (sessionUser?.apiKey) {
+      navigator.clipboard.writeText(sessionUser.apiKey);
       setIsKeyCopied(true);
       setTimeout(() => setIsKeyCopied(false), 2000);
     }
   };
 
   const copyEndpoint = () => {
-    const endpoint = `${window.location.origin}${window.location.pathname.split('#')[0]}api?api=${user?.apiKey || 'YOUR_API_TOKEN'}&url=YOUR_URL`;
+    const endpoint = `${window.location.origin}${window.location.pathname.split('#')[0]}api?api=${sessionUser?.apiKey || 'YOUR_API_TOKEN'}&url=YOUR_URL`;
     navigator.clipboard.writeText(endpoint);
     setIsUrlCopied(true);
     setTimeout(() => setIsUrlCopied(false), 2000);
@@ -106,7 +101,7 @@ const ApiHandler = () => {
              <Key className="w-10 h-10" />
            </div>
            <h2 className="text-4xl font-black uppercase tracking-tighter">Developer API</h2>
-           <p className="text-slate-400 text-[10px] font-black uppercase tracking-[0.4em] mt-4">Programmatic Relay Management</p>
+           <p className="text-slate-400 text-[10px] font-black uppercase tracking-[0.4em] mt-4">API Token Authentication</p>
         </div>
 
         {error && <div className="p-6 bg-red-500/10 border border-red-500/20 text-red-400 rounded-2xl text-[10px] font-black text-center mb-8 uppercase tracking-widest">{error}</div>}
@@ -114,7 +109,7 @@ const ApiHandler = () => {
         {result ? (
           <div className="space-y-6 text-center animate-in">
             <div className="text-left mb-4">
-              <p className="text-[10px] font-black uppercase tracking-[0.4em] text-indigo-400">Generated Short Link</p>
+              <p className="text-[10px] font-black uppercase tracking-[0.4em] text-indigo-400">Successfully Shortened</p>
             </div>
             <div className="bg-slate-800 p-8 rounded-2xl font-mono text-indigo-300 text-sm break-all border border-white/5 flex items-center justify-between gap-4">
               <span className="truncate">{result}</span>
@@ -123,59 +118,48 @@ const ApiHandler = () => {
               </button>
             </div>
             <button onClick={copyResult} className="w-full py-6 bg-white text-slate-900 rounded-2xl font-black uppercase text-xs tracking-[0.2em] shadow-2xl active:scale-95 transition">
-              {isResultCopied ? 'Result Copied' : 'Copy Short Link'}
+              {isResultCopied ? 'Copied' : 'Copy Short Link'}
             </button>
           </div>
         ) : (
           <div className="space-y-10">
-            {/* API KEY SECTION */}
             <div className="space-y-4">
               <div className="flex justify-between items-end px-1">
-                <p className="text-[10px] font-black uppercase tracking-[0.4em] text-indigo-400">Your Personal API Token</p>
-                {user && <span className="text-[9px] font-bold text-green-500 uppercase tracking-widest bg-green-500/10 px-2 py-1 rounded">Active</span>}
+                <p className="text-[10px] font-black uppercase tracking-[0.4em] text-indigo-400">Your API Token</p>
+                {sessionUser && <span className="text-[9px] font-bold text-green-500 uppercase tracking-widest bg-green-500/10 px-2 py-1 rounded">Active</span>}
               </div>
               <div className="flex items-center gap-4">
-                <div className="flex-grow bg-slate-800 p-6 rounded-2xl font-mono text-indigo-100 text-sm border border-white/10 overflow-hidden truncate shadow-inner">
-                  {user ? user.apiKey : 'Login required to view key'}
+                <div className="flex-grow bg-slate-800 p-6 rounded-2xl font-mono text-indigo-100 text-sm border border-white/10 overflow-hidden truncate">
+                  {sessionUser ? sessionUser.apiKey : 'Login required'}
                 </div>
-                {user && (
-                  <button onClick={copyKey} className="flex items-center gap-3 px-6 py-6 bg-white/5 hover:bg-white/10 border border-white/10 rounded-2xl transition-all active:scale-95 group">
-                    {isKeyCopied ? <Check className="w-5 h-5 text-green-400" /> : <Copy className="w-5 h-5 text-slate-300 group-hover:text-white" />}
+                {sessionUser && (
+                  <button onClick={copyKey} className="flex items-center gap-3 px-6 py-6 bg-white/5 hover:bg-white/10 border border-white/10 rounded-2xl transition-all active:scale-95">
+                    {isKeyCopied ? <Check className="w-5 h-5 text-green-400" /> : <Copy className="w-5 h-5 text-slate-300" />}
                   </button>
                 )}
               </div>
             </div>
 
-            {/* ENDPOINT SECTION */}
             <div className="space-y-4">
-              <p className="text-[10px] font-black uppercase tracking-[0.4em] text-indigo-400">Direct Shorten Endpoint (GET)</p>
+              <p className="text-[10px] font-black uppercase tracking-[0.4em] text-indigo-400">Relay Endpoint (GET)</p>
               <div className="relative group">
-                <div className="bg-black/40 p-6 md:p-8 rounded-2xl border border-white/5 font-mono text-[11px] text-slate-300 leading-relaxed overflow-x-auto whitespace-nowrap scrollbar-hide">
+                <div className="bg-black/40 p-6 md:p-8 rounded-2xl border border-white/5 font-mono text-[11px] text-slate-300 overflow-x-auto whitespace-nowrap">
                   <span className="text-green-400 font-bold mr-3">GET</span> 
                   {window.location.origin}{window.location.pathname.split('#')[0]}api?api=
-                  <span className="text-indigo-400 font-bold">{user ? user.apiKey : 'YOUR_API_TOKEN'}</span>
-                  &url=<span className="text-indigo-400 font-bold">YOUR_URL</span>
+                  <span className="text-indigo-400 font-bold">{sessionUser ? sessionUser.apiKey : 'TOKEN'}</span>
+                  &url=<span className="text-indigo-400 font-bold">URL</span>
                 </div>
-                <button onClick={copyEndpoint} className="absolute top-4 right-4 flex items-center gap-2 p-3 bg-white/5 hover:bg-white/10 border border-white/5 rounded-xl transition-all active:scale-95 group backdrop-blur-md">
-                  <span className="text-[9px] font-black uppercase tracking-widest hidden sm:inline text-slate-400 group-hover:text-white">Copy Endpoint</span>
+                <button onClick={copyEndpoint} className="absolute top-4 right-4 flex items-center gap-2 p-3 bg-white/5 hover:bg-white/10 border border-white/5 rounded-xl transition-all active:scale-95 group">
+                  <span className="text-[9px] font-black uppercase tracking-widest hidden sm:inline text-slate-400 group-hover:text-white">Copy URL</span>
                   {isUrlCopied ? <Check className="w-4 h-4 text-green-400" /> : <Copy className="w-4 h-4 text-slate-500 group-hover:text-white" />}
                 </button>
               </div>
-            </div>
-
-            <div className="bg-white/5 p-8 rounded-2xl border border-white/5">
-              <h4 className="text-[11px] font-black uppercase tracking-[0.2em] text-white mb-4 flex items-center">
-                <Shield className="w-4 h-4 mr-2 text-indigo-500" /> API Documentation
-              </h4>
-              <p className="text-xs text-slate-500 font-bold uppercase tracking-widest leading-relaxed">
-                Use this endpoint to automate link creation. All links generated via API are credited to your account and earn revenue at your current CPM rate.
-              </p>
             </div>
           </div>
         )}
 
         <button onClick={() => navigate('/')} className="w-full mt-12 text-slate-500 hover:text-white transition text-[10px] font-black uppercase tracking-[0.3em] flex items-center justify-center group">
-          <ChevronLeft className="w-4 h-4 mr-2 group-hover:-translate-x-1 transition-transform" /> Back to Dashboard
+          <ChevronLeft className="w-4 h-4 mr-2 group-hover:-translate-x-1 transition-transform" /> Back to Home
         </button>
       </div>
     </div>
@@ -212,7 +196,7 @@ const GlobalLayout: React.FC<GlobalLayoutProps> = ({ children, settings, current
             
             <div className="hidden md:flex items-center space-x-10">
               <RouterLink to="/" className="text-[11px] font-black text-slate-600 hover:text-indigo-600 uppercase tracking-[0.2em] transition">Shorten</RouterLink>
-              <RouterLink to="/api" className="text-[11px] font-black text-slate-600 hover:text-indigo-600 uppercase tracking-[0.2em] flex items-center transition">API</RouterLink>
+              <RouterLink to="/api" className="text-[11px] font-black text-slate-600 hover:text-indigo-600 uppercase tracking-[0.2em] transition">API</RouterLink>
               <RouterLink to="/blog" className="text-[11px] font-black text-slate-600 hover:text-indigo-600 uppercase tracking-[0.2em] transition">Blog</RouterLink>
               
               {currentUser ? (
