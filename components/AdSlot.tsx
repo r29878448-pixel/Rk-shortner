@@ -6,23 +6,33 @@ interface AdSlotProps {
   className?: string;
 }
 
+/**
+ * AdSlot Component
+ * Renders the custom HTML/Script provided in the Admin Dashboard.
+ * Uses range.createContextualFragment to ensure <script> tags execute.
+ */
 const AdSlot: React.FC<AdSlotProps> = ({ html, className = "" }) => {
   const adRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (adRef.current && html && html.trim() !== '') {
-      // Clear previous content
+      // 1. Clear previous content to avoid duplicates
       adRef.current.innerHTML = '';
       
-      // Use contextual fragment to ensure <script> tags are executed by the browser
+      // 2. Use contextual fragment to allow script execution
+      // This is crucial for Adsterra/SocialBar scripts to work in React
       const range = document.createRange();
       range.selectNode(adRef.current);
+      
       try {
         const documentFragment = range.createContextualFragment(html);
         adRef.current.appendChild(documentFragment);
+        
+        // Log for developer verification
+        console.debug("SwiftLink: Successfully injected user ad code.");
       } catch (e) {
-        console.error("Ad injection error:", e);
-        // Fallback for simple HTML
+        console.error("SwiftLink: Ad injection failed.", e);
+        // Fallback to basic innerHTML
         adRef.current.innerHTML = html;
       }
     }
@@ -33,7 +43,7 @@ const AdSlot: React.FC<AdSlotProps> = ({ html, className = "" }) => {
   return (
     <div 
       ref={adRef} 
-      className={`ad-container overflow-hidden min-h-[50px] flex justify-center items-center transition-all ${className}`} 
+      className={`swiftlink-ad-wrapper overflow-hidden min-h-[50px] flex justify-center items-center transition-opacity duration-500 ${className}`} 
     />
   );
 };
