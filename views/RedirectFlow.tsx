@@ -151,15 +151,18 @@ const RedirectFlow: React.FC<RedirectFlowProps> = ({ settings, currentUser }) =>
     window.location.href = targetUrl;
   };
 
+  // Immediate Ads during Loading
   if (loading) return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-white">
-      <div className="flex flex-col items-center">
+    <div className="min-h-screen bg-white">
+      <AdSlot html={activeSettings.adSlots.top} className="py-4 bg-slate-50 border-b border-slate-100" />
+      <div className="flex flex-col items-center justify-center pt-40">
         <div className="w-12 h-12 bg-indigo-600 rounded-xl flex items-center justify-center mb-6">
           <Globe className="text-white w-6 h-6 animate-pulse" />
         </div>
         <Loader2 className="w-8 h-8 text-indigo-600 animate-spin mb-4" />
         <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">{activeSettings.siteName} Protocol {currentStep}/{totalSteps}</p>
       </div>
+      <AdSlot html={activeSettings.adSlots.bottom} className="fixed bottom-0 left-0 right-0 py-4 bg-white border-t border-slate-100 z-50 shadow-lg" />
     </div>
   );
 
@@ -176,7 +179,7 @@ const RedirectFlow: React.FC<RedirectFlowProps> = ({ settings, currentUser }) =>
 
   return (
     <div className="min-h-screen bg-white text-slate-900 font-sans pb-40">
-      {/* PERSISTENT HEADER AD - SHOWS FROM REDIRECT START */}
+      {/* PERSISTENT HEADER AD */}
       <AdSlot html={activeSettings.adSlots.top} className="py-4 bg-slate-50 border-b border-slate-100" />
       
       <div className="sticky top-0 z-[100] w-full bg-slate-900 text-white px-8 py-5 flex justify-between items-center shadow-lg border-b border-white/10">
@@ -242,16 +245,24 @@ const RedirectFlow: React.FC<RedirectFlowProps> = ({ settings, currentUser }) =>
             </div>
             
             {flowState === 'verifying' && (
-              <button 
-                onClick={handleVerify}
-                className="w-full py-8 bg-indigo-600 text-white rounded-2xl font-black uppercase text-sm tracking-[0.2em] shadow-2xl hover:bg-indigo-700 transition-all flex items-center justify-center animate-bounce"
-              >
-                Verify & Continue <ChevronDown className="ml-3 w-5 h-5" />
-              </button>
+              <div className="space-y-6 animate-in">
+                {/* AD ABOVE BUTTON */}
+                <AdSlot html={activeSettings.adSlots.top} className="mb-4" />
+                <button 
+                  onClick={handleVerify}
+                  className="w-full py-8 bg-indigo-600 text-white rounded-2xl font-black uppercase text-sm tracking-[0.2em] shadow-2xl hover:bg-indigo-700 transition-all flex items-center justify-center animate-bounce"
+                >
+                  Verify & Continue <ChevronDown className="ml-3 w-5 h-5" />
+                </button>
+                {/* AD BELOW BUTTON */}
+                <AdSlot html={activeSettings.adSlots.bottom} className="mt-4" />
+              </div>
             )}
 
             {flowState === 'ready' && (
-              <div ref={bottomRef} className="space-y-4 animate-in">
+              <div ref={bottomRef} className="space-y-6 animate-in">
+                {/* AD ABOVE FINAL BUTTON */}
+                <AdSlot html={activeSettings.adSlots.top} className="mb-4" />
                 <button 
                   onClick={handleNextAction}
                   className="w-full py-8 bg-slate-900 text-white rounded-2xl font-black uppercase text-sm tracking-[0.2em] shadow-2xl hover:bg-black transition-all flex items-center justify-center group"
@@ -259,7 +270,9 @@ const RedirectFlow: React.FC<RedirectFlowProps> = ({ settings, currentUser }) =>
                   {isFinalStep ? 'Final Destination' : `Proceed to Step ${currentStep + 1}`}
                   <ArrowRight className="ml-3 w-5 h-5 group-hover:translate-x-2 transition-transform" />
                 </button>
-                <p className="text-[9px] text-center font-black uppercase tracking-widest text-slate-400">Click button to bypass gateway</p>
+                {/* AD BELOW FINAL BUTTON */}
+                <AdSlot html={activeSettings.adSlots.bottom} className="mt-4" />
+                <p className="text-[9px] text-center font-black uppercase tracking-widest text-slate-400">Secure relay path authenticated</p>
               </div>
             )}
           </div>
@@ -271,5 +284,4 @@ const RedirectFlow: React.FC<RedirectFlowProps> = ({ settings, currentUser }) =>
   );
 };
 
-// Fixed: Added default export to resolve "Module has no default export" error in App.tsx
 export default RedirectFlow;

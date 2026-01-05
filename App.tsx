@@ -13,7 +13,8 @@ import {
   Globe,
   Code,
   Copy,
-  Check
+  Check,
+  Key
 } from 'lucide-react';
 import { User, SiteSettings, UserRole } from './types.ts';
 import { DEFAULT_SETTINGS } from './constants.tsx';
@@ -49,7 +50,7 @@ const ApiHandler = () => {
 
     if (api && url) {
       if (!currentUser || currentUser.apiKey !== api) {
-        setError('AUTH_ERROR: Invalid API Token.');
+        setError('AUTH_ERROR: Invalid API Token provided in request.');
         return;
       }
 
@@ -70,7 +71,7 @@ const ApiHandler = () => {
       const finalResult = `${baseUrl}#/s/${shortCode}`;
       setResult(finalResult);
     } else {
-      setError('PARAM_ERROR: both "api" and "url" are required.');
+      setError('PARAM_ERROR: both "api" and "url" are required in the GET request.');
     }
   }, [location, navigate]);
 
@@ -83,7 +84,7 @@ const ApiHandler = () => {
   };
 
   const copyEndpoint = () => {
-    const endpoint = `${window.location.origin}${window.location.pathname.split('#')[0]}api?api=${user?.apiKey || 'YOUR_API_KEY'}&url=YOUR_URL`;
+    const endpoint = `${window.location.origin}${window.location.pathname.split('#')[0]}api?api=${user?.apiKey || 'YOUR_API_TOKEN'}&url=YOUR_URL`;
     navigator.clipboard.writeText(endpoint);
     setIsUrlCopied(true);
     setTimeout(() => setIsUrlCopied(false), 2000);
@@ -102,10 +103,10 @@ const ApiHandler = () => {
       <div className="max-w-3xl w-full bg-white/5 border border-white/10 p-10 md:p-16 rounded-[2.5rem] backdrop-blur-3xl shadow-2xl">
         <div className="flex flex-col items-center mb-12">
            <div className="w-20 h-20 bg-indigo-600 rounded-3xl flex items-center justify-center shadow-2xl shadow-indigo-500/20 mb-6">
-             <Code className="w-10 h-10" />
+             <Key className="w-10 h-10" />
            </div>
-           <h2 className="text-4xl font-black uppercase tracking-tighter">Developer Hub</h2>
-           <p className="text-slate-400 text-[10px] font-black uppercase tracking-[0.4em] mt-4">Programmatic Link Management</p>
+           <h2 className="text-4xl font-black uppercase tracking-tighter">Developer API</h2>
+           <p className="text-slate-400 text-[10px] font-black uppercase tracking-[0.4em] mt-4">Programmatic Relay Management</p>
         </div>
 
         {error && <div className="p-6 bg-red-500/10 border border-red-500/20 text-red-400 rounded-2xl text-[10px] font-black text-center mb-8 uppercase tracking-widest">{error}</div>}
@@ -129,19 +130,16 @@ const ApiHandler = () => {
           <div className="space-y-10">
             {/* API KEY SECTION */}
             <div className="space-y-4">
-              <div className="flex justify-between items-end">
-                <p className="text-[10px] font-black uppercase tracking-[0.4em] text-indigo-400">Your Private API Key</p>
-                {user && (
-                   <span className="text-[9px] font-bold text-slate-500 uppercase tracking-widest">Active Token</span>
-                )}
+              <div className="flex justify-between items-end px-1">
+                <p className="text-[10px] font-black uppercase tracking-[0.4em] text-indigo-400">Your Personal API Token</p>
+                {user && <span className="text-[9px] font-bold text-green-500 uppercase tracking-widest bg-green-500/10 px-2 py-1 rounded">Active</span>}
               </div>
               <div className="flex items-center gap-4">
-                <div className="flex-grow bg-slate-800 p-5 rounded-2xl font-mono text-indigo-100 text-xs border border-white/5 overflow-hidden truncate">
-                  {user ? user.apiKey : 'Login to view API Key'}
+                <div className="flex-grow bg-slate-800 p-6 rounded-2xl font-mono text-indigo-100 text-sm border border-white/10 overflow-hidden truncate shadow-inner">
+                  {user ? user.apiKey : 'Login required to view key'}
                 </div>
                 {user && (
-                  <button onClick={copyKey} className="flex items-center gap-3 px-6 py-5 bg-white/5 hover:bg-white/10 border border-white/10 rounded-2xl transition-all active:scale-95 group">
-                    <span className="text-[10px] font-black uppercase tracking-widest hidden sm:inline">Copy Key</span>
+                  <button onClick={copyKey} className="flex items-center gap-3 px-6 py-6 bg-white/5 hover:bg-white/10 border border-white/10 rounded-2xl transition-all active:scale-95 group">
                     {isKeyCopied ? <Check className="w-5 h-5 text-green-400" /> : <Copy className="w-5 h-5 text-slate-300 group-hover:text-white" />}
                   </button>
                 )}
@@ -150,16 +148,16 @@ const ApiHandler = () => {
 
             {/* ENDPOINT SECTION */}
             <div className="space-y-4">
-              <p className="text-[10px] font-black uppercase tracking-[0.4em] text-indigo-400">API Endpoint Structure</p>
+              <p className="text-[10px] font-black uppercase tracking-[0.4em] text-indigo-400">Direct Shorten Endpoint (GET)</p>
               <div className="relative group">
-                <div className="bg-black/40 p-6 md:p-8 rounded-2xl border border-white/5 font-mono text-[11px] text-slate-300 leading-relaxed overflow-x-auto whitespace-nowrap">
+                <div className="bg-black/40 p-6 md:p-8 rounded-2xl border border-white/5 font-mono text-[11px] text-slate-300 leading-relaxed overflow-x-auto whitespace-nowrap scrollbar-hide">
                   <span className="text-green-400 font-bold mr-3">GET</span> 
                   {window.location.origin}{window.location.pathname.split('#')[0]}api?api=
-                  <span className="text-indigo-400">{user ? user.apiKey : 'YOUR_KEY'}</span>
-                  &url=<span className="text-indigo-400">YOUR_URL</span>
+                  <span className="text-indigo-400 font-bold">{user ? user.apiKey : 'YOUR_API_TOKEN'}</span>
+                  &url=<span className="text-indigo-400 font-bold">YOUR_URL</span>
                 </div>
-                <button onClick={copyEndpoint} className="absolute top-4 right-4 flex items-center gap-2 p-3 bg-white/5 hover:bg-white/10 border border-white/5 rounded-xl transition-all active:scale-95 group">
-                  <span className="text-[9px] font-black uppercase tracking-widest hidden sm:inline text-slate-400">Copy URL</span>
+                <button onClick={copyEndpoint} className="absolute top-4 right-4 flex items-center gap-2 p-3 bg-white/5 hover:bg-white/10 border border-white/5 rounded-xl transition-all active:scale-95 group backdrop-blur-md">
+                  <span className="text-[9px] font-black uppercase tracking-widest hidden sm:inline text-slate-400 group-hover:text-white">Copy Endpoint</span>
                   {isUrlCopied ? <Check className="w-4 h-4 text-green-400" /> : <Copy className="w-4 h-4 text-slate-500 group-hover:text-white" />}
                 </button>
               </div>
@@ -167,17 +165,17 @@ const ApiHandler = () => {
 
             <div className="bg-white/5 p-8 rounded-2xl border border-white/5">
               <h4 className="text-[11px] font-black uppercase tracking-[0.2em] text-white mb-4 flex items-center">
-                <Shield className="w-4 h-4 mr-2 text-indigo-500" /> Usage Guidelines
+                <Shield className="w-4 h-4 mr-2 text-indigo-500" /> API Documentation
               </h4>
               <p className="text-xs text-slate-500 font-bold uppercase tracking-widest leading-relaxed">
-                Automate your workflow by sending GET requests. Ensure your target URL is URL-encoded for reliability across network nodes.
+                Use this endpoint to automate link creation. All links generated via API are credited to your account and earn revenue at your current CPM rate.
               </p>
             </div>
           </div>
         )}
 
         <button onClick={() => navigate('/')} className="w-full mt-12 text-slate-500 hover:text-white transition text-[10px] font-black uppercase tracking-[0.3em] flex items-center justify-center group">
-          <ChevronLeft className="w-4 h-4 mr-2 group-hover:-translate-x-1 transition-transform" /> Return to Command Center
+          <ChevronLeft className="w-4 h-4 mr-2 group-hover:-translate-x-1 transition-transform" /> Back to Dashboard
         </button>
       </div>
     </div>

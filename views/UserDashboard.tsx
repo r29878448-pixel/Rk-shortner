@@ -7,7 +7,10 @@ import {
   Plus, 
   TrendingUp,
   Wallet,
-  Globe
+  Globe,
+  Key,
+  Copy,
+  Terminal
 } from 'lucide-react';
 import { User, Link as LinkType, SiteSettings } from '../types.ts';
 import { DEFAULT_SETTINGS } from '../constants.tsx';
@@ -20,6 +23,7 @@ const UserDashboard: React.FC<UserDashboardProps> = ({ user }) => {
   const navigate = useNavigate();
   const [links, setLinks] = useState<LinkType[]>([]);
   const [copyStatus, setCopyStatus] = useState<Record<string, boolean>>({});
+  const [isKeyCopied, setIsKeyCopied] = useState(false);
   const settings: SiteSettings = JSON.parse(localStorage.getItem('swiftlink_settings') || JSON.stringify(DEFAULT_SETTINGS));
 
   useEffect(() => {
@@ -34,6 +38,14 @@ const UserDashboard: React.FC<UserDashboardProps> = ({ user }) => {
     navigator.clipboard.writeText(text);
     setCopyStatus({ ...copyStatus, [id]: true });
     setTimeout(() => setCopyStatus({ ...copyStatus, [id]: false }), 2000);
+  };
+
+  const copyApiKey = () => {
+    if (user?.apiKey) {
+      navigator.clipboard.writeText(user.apiKey);
+      setIsKeyCopied(true);
+      setTimeout(() => setIsKeyCopied(false), 2000);
+    }
   };
 
   if (!user) return null;
@@ -70,43 +82,70 @@ const UserDashboard: React.FC<UserDashboardProps> = ({ user }) => {
         </div>
       </div>
 
-      <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
-        <div className="p-8 border-b border-slate-100 flex items-center justify-between bg-slate-50">
-           <h2 className="text-xl font-black text-slate-900 uppercase tracking-tight">Active Relays</h2>
-           <Globe className="w-5 h-5 text-slate-300" />
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-12">
+        {/* API ACCESS CARD */}
+        <div className="lg:col-span-1 bg-slate-900 rounded-xl p-8 text-white shadow-2xl relative overflow-hidden group">
+           <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-600/20 blur-[60px] rounded-full -translate-y-12 translate-x-12 group-hover:bg-indigo-600/40 transition-all"></div>
+           <div className="relative z-10">
+              <div className="flex items-center space-x-3 mb-6">
+                <Terminal className="w-5 h-5 text-indigo-400" />
+                <h2 className="text-lg font-black uppercase tracking-tight">API Access</h2>
+              </div>
+              <p className="text-[10px] font-bold text-slate-500 uppercase tracking-[0.2em] mb-4">Your Private Secret Token</p>
+              <div className="bg-white/10 p-4 rounded-xl border border-white/5 font-mono text-xs text-indigo-200 mb-6 truncate">
+                {user.apiKey}
+              </div>
+              <div className="flex gap-3">
+                <button onClick={copyApiKey} className="flex-grow flex items-center justify-center gap-2 py-4 bg-white text-slate-900 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-indigo-50 transition active:scale-95">
+                  {isKeyCopied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+                  {isKeyCopied ? 'Copied' : 'Copy Key'}
+                </button>
+                <button onClick={() => navigate('/api')} className="p-4 bg-white/10 rounded-xl hover:bg-white/20 transition border border-white/5">
+                  <Globe className="w-4 h-4" />
+                </button>
+              </div>
+           </div>
         </div>
-        <div className="overflow-x-auto">
-          {links.length > 0 ? (
-            <table className="w-full text-left">
-              <thead>
-                <tr className="text-[10px] font-black uppercase tracking-widest text-slate-400 bg-slate-50 border-b border-slate-100">
-                  <th className="px-10 py-6">Relay Path</th>
-                  <th className="px-10 py-6">Hits</th>
-                  <th className="px-10 py-6">Earnings</th>
-                  <th className="px-10 py-6 text-right">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100">
-                {links.map(link => (
-                  <tr key={link.id} className="hover:bg-slate-50 transition-colors">
-                    <td className="px-10 py-8">
-                      <p className="text-indigo-600 font-black text-base">/s/{link.shortCode}</p>
-                      <p className="text-[9px] text-slate-400 font-mono truncate max-w-[200px]">{link.originalUrl}</p>
-                    </td>
-                    <td className="px-10 py-8 font-black text-slate-900">{link.clicks || 0}</td>
-                    <td className="px-10 py-8 font-black text-green-600">₹{(link.earnings || 0).toFixed(2)}</td>
-                    <td className="px-10 py-8 text-right flex justify-end">
-                      <button onClick={() => handleCopy(`${window.location.origin + window.location.pathname.split('#')[0]}#/s/${link.shortCode}`, link.id)} className="p-3 bg-white border border-slate-200 rounded-xl text-slate-400 hover:text-indigo-600 transition shadow-sm">
-                        {copyStatus[link.id] ? <Check className="w-5 h-5" /> : <LinkIcon className="w-5 h-5" />}
-                      </button>
-                    </td>
+
+        {/* ACTIVE RELAYS LIST */}
+        <div className="lg:col-span-2 bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+          <div className="p-8 border-b border-slate-100 flex items-center justify-between bg-slate-50">
+             <h2 className="text-xl font-black text-slate-900 uppercase tracking-tight">Active Relays</h2>
+             <Globe className="w-5 h-5 text-slate-300" />
+          </div>
+          <div className="overflow-x-auto">
+            {links.length > 0 ? (
+              <table className="w-full text-left">
+                <thead>
+                  <tr className="text-[10px] font-black uppercase tracking-widest text-slate-400 bg-slate-50 border-b border-slate-100">
+                    <th className="px-10 py-6">Relay Path</th>
+                    <th className="px-10 py-6">Hits</th>
+                    <th className="px-10 py-6">Earnings</th>
+                    <th className="px-10 py-6 text-right">Actions</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          ) : (
-            <div className="p-20 text-center text-slate-300 font-black uppercase tracking-widest">No Active Relays Found.</div>
-          )}
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  {links.map(link => (
+                    <tr key={link.id} className="hover:bg-slate-50 transition-colors">
+                      <td className="px-10 py-8">
+                        <p className="text-indigo-600 font-black text-base">/s/{link.shortCode}</p>
+                        <p className="text-[9px] text-slate-400 font-mono truncate max-w-[200px]">{link.originalUrl}</p>
+                      </td>
+                      <td className="px-10 py-8 font-black text-slate-900">{link.clicks || 0}</td>
+                      <td className="px-10 py-8 font-black text-green-600">₹{(link.earnings || 0).toFixed(2)}</td>
+                      <td className="px-10 py-8 text-right flex justify-end">
+                        <button onClick={() => handleCopy(`${window.location.origin + window.location.pathname.split('#')[0]}#/s/${link.shortCode}`, link.id)} className="p-3 bg-white border border-slate-200 rounded-xl text-slate-400 hover:text-indigo-600 transition shadow-sm">
+                          {copyStatus[link.id] ? <Check className="w-5 h-5" /> : <LinkIcon className="w-5 h-5" />}
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            ) : (
+              <div className="p-20 text-center text-slate-300 font-black uppercase tracking-widest">No Active Relays Found.</div>
+            )}
+          </div>
         </div>
       </div>
     </div>
