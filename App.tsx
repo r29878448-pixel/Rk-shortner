@@ -4,6 +4,7 @@ import { HashRouter, Routes, Route, Link as RouterLink, useLocation, useNavigate
 import { 
   Link as LinkIcon,
   Menu,
+  X,
   Shield,
   ChevronLeft,
   Globe,
@@ -11,7 +12,7 @@ import {
   Check,
   Key,
   Terminal,
-  ExternalLink
+  Code
 } from 'lucide-react';
 import { User, SiteSettings, UserRole, Link as LinkType } from './types.ts';
 import { DEFAULT_SETTINGS } from './constants.tsx';
@@ -27,32 +28,30 @@ import BlogPage from './views/BlogPage.tsx';
 const ApiHandler = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const [result, setResult] = useState<string | null>(null);
+  const [apiResult, setApiResult] = useState<any>(null);
   const [error, setError] = useState<string | null>(null);
   const [isCopied, setIsCopied] = useState(false);
-  const [sessionUser, setSessionUser] = useState<User | null>(null);
+  const [user, setUser] = useState<User | null>(null);
 
   useEffect(() => {
-    // 1. Get current logged-in user for the UI
     const storedUser = localStorage.getItem('swiftlink_user');
-    setSessionUser(storedUser ? JSON.parse(storedUser) : null);
+    setUser(storedUser ? JSON.parse(storedUser) : null);
 
-    // 2. Parse API Query Parameters
     const params = new URLSearchParams(location.search);
-    const apiToken = params.get('api');
+    const token = params.get('api');
     const targetUrl = params.get('url');
 
-    if (!apiToken || !targetUrl) return;
+    if (!token || !targetUrl) return;
 
-    // 3. AUTHENTICATION: Check all registered users in "database"
+    // Validate against "database"
     const allUsers = JSON.parse(localStorage.getItem('swiftlink_registered_users') || '[]');
-    const userFound = allUsers.find((u: any) => u.profile.apiKey === apiToken);
+    const matching = allUsers.find((u: any) => u.profile.apiKey === token);
 
-    if (userFound) {
+    if (matching) {
       const shortCode = Math.random().toString(36).substring(2, 9);
       const newLink: LinkType = {
         id: Math.random().toString(36).substring(7),
-        userId: userFound.profile.id,
+        userId: matching.profile.id,
         originalUrl: targetUrl,
         shortCode,
         clicks: 0,
@@ -60,104 +59,86 @@ const ApiHandler = () => {
         createdAt: new Date()
       };
       
-      // Save to global link storage
-      const existingLinks = JSON.parse(localStorage.getItem('swiftlink_global_links') || '[]');
-      localStorage.setItem('swiftlink_global_links', JSON.stringify([newLink, ...existingLinks]));
+      const existing = JSON.parse(localStorage.getItem('swiftlink_global_links') || '[]');
+      localStorage.setItem('swiftlink_global_links', JSON.stringify([newLink, ...existing]));
       
       const baseUrl = window.location.origin + window.location.pathname.split('#')[0];
-      setResult(`${baseUrl}#/s/${shortCode}`);
+      setApiResult({
+        status: "success",
+        shortenedUrl: `${baseUrl}#/s/${shortCode}`,
+        originalUrl: targetUrl,
+        timestamp: new Date().toISOString()
+      });
       setError(null);
     } else {
-      setError('INVALID_API_KEY: The provided token does not match any active publisher.');
-      setResult(null);
+      setError('INVALID_KEY: The API token provided is invalid.');
     }
   }, [location]);
 
-  const copyToClipboard = (text: string) => {
-    navigator.clipboard.writeText(text);
-    setIsCopied(true);
-    setTimeout(() => setIsCopied(false), 2000);
+  const copyResult = () => {
+    if (apiResult) {
+      navigator.clipboard.writeText(apiResult.shortenedUrl);
+      setIsCopied(true);
+      setTimeout(() => setIsCopied(false), 2000);
+    }
   };
 
   return (
-    <div className="min-h-screen bg-slate-900 flex items-center justify-center p-6 text-white font-sans">
-      <div className="max-w-3xl w-full">
-        {result ? (
-          /* SUCCESS VIEW - API RESPONSE */
-          <div className="bg-white/5 border border-white/10 p-10 md:p-16 rounded-[2.5rem] backdrop-blur-3xl shadow-2xl animate-in text-center">
-            <div className="w-20 h-20 bg-green-500/20 rounded-3xl flex items-center justify-center mx-auto mb-8">
-              <Check className="w-10 h-10 text-green-500" />
+    <div className="min-h-screen bg-slate-900 flex items-center justify-center p-4 text-white">
+      <div className="max-w-2xl w-full">
+        {apiResult ? (
+          <div className="bg-black/60 p-10 rounded-[2rem] border border-white/10 backdrop-blur-3xl shadow-2xl animate-in">
+            <div className="flex items-center space-x-4 mb-8">
+              <div className="w-12 h-12 bg-green-500/20 rounded-2xl flex items-center justify-center">
+                <Check className="text-green-500 w-6 h-6" />
+              </div>
+              <div>
+                <h2 className="text-xl font-black uppercase tracking-tight">API Success</h2>
+                <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">200 OK - JSON RESPONSE</p>
+              </div>
             </div>
-            <h2 className="text-3xl font-black uppercase tracking-tighter mb-2">Relay Created</h2>
-            <p className="text-slate-400 text-[10px] font-black uppercase tracking-[0.4em] mb-10">Endpoint Response Success</p>
             
-            <div className="bg-black/40 p-6 rounded-2xl font-mono text-indigo-300 text-sm break-all border border-white/5 mb-8 flex items-center justify-between gap-4">
-              <span className="truncate">{result}</span>
-              <button onClick={() => copyToClipboard(result)} className="shrink-0 p-3 bg-white/5 hover:bg-white/10 rounded-xl transition">
-                <Copy className="w-4 h-4" />
-              </button>
-            </div>
+            <pre className="bg-black/40 p-6 rounded-xl font-mono text-xs text-indigo-300 overflow-x-auto border border-white/5 mb-8">
+              {JSON.stringify(apiResult, null, 2)}
+            </pre>
 
-            <div className="grid grid-cols-2 gap-4">
-              <button onClick={() => copyToClipboard(result)} className="py-5 bg-white text-slate-900 rounded-2xl font-black uppercase text-[10px] tracking-widest shadow-xl active:scale-95 transition">
-                {isCopied ? 'Copied' : 'Copy URL'}
+            <div className="flex gap-4">
+              <button onClick={copyResult} className="flex-grow py-5 bg-white text-slate-900 rounded-xl font-black uppercase text-[10px] tracking-widest transition active:scale-95">
+                {isCopied ? 'Copied to Clipboard' : 'Copy Short Link'}
               </button>
-              <button onClick={() => window.location.href = result} className="py-5 bg-indigo-600 text-white rounded-2xl font-black uppercase text-[10px] tracking-widest shadow-xl active:scale-95 transition flex items-center justify-center">
-                Visit <ExternalLink className="ml-2 w-4 h-4" />
-              </button>
+              <button onClick={() => setApiResult(null)} className="px-8 py-5 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-[10px] font-black uppercase tracking-widest transition">Reset</button>
             </div>
-            
-            <button onClick={() => { setResult(null); navigate('/api'); }} className="mt-10 text-slate-500 hover:text-white text-[10px] font-black uppercase tracking-widest transition">Generate Another</button>
           </div>
         ) : (
-          /* DOCUMENTATION / ERROR VIEW */
           <div className="bg-white/5 border border-white/10 p-10 md:p-16 rounded-[2.5rem] backdrop-blur-3xl shadow-2xl">
             <div className="flex flex-col items-center mb-12 text-center">
               <div className="w-20 h-20 bg-indigo-600 rounded-3xl flex items-center justify-center shadow-2xl shadow-indigo-500/20 mb-6">
                 <Terminal className="w-10 h-10" />
               </div>
-              <h2 className="text-4xl font-black uppercase tracking-tighter">Developer Hub</h2>
-              <p className="text-slate-400 text-[10px] font-black uppercase tracking-[0.4em] mt-4">Programmatic Link Management</p>
+              <h2 className="text-4xl font-black uppercase tracking-tighter">Developer API</h2>
+              <p className="text-slate-400 text-[10px] font-black uppercase tracking-[0.4em] mt-4">Programmatic Link Control</p>
             </div>
 
-            {error && (
-              <div className="p-6 bg-red-500/10 border border-red-500/20 text-red-400 rounded-2xl text-[10px] font-black text-center mb-10 uppercase tracking-widest animate-pulse">
-                {error}
-              </div>
-            )}
+            {error && <div className="p-5 bg-red-500/10 border border-red-500/20 text-red-400 rounded-xl text-[10px] font-black text-center mb-10 uppercase tracking-widest">{error}</div>}
 
-            <div className="space-y-10">
-              {/* TOKEN SECTION */}
-              <div className="space-y-4">
-                <p className="text-[10px] font-black uppercase tracking-[0.4em] text-indigo-400">Your Access Token</p>
-                <div className="flex items-center gap-4">
-                  <div className="flex-grow bg-slate-800 p-6 rounded-2xl font-mono text-indigo-100 text-sm border border-white/10 overflow-hidden truncate">
-                    {sessionUser ? sessionUser.apiKey : 'sk_live_login_to_view_your_token'}
-                  </div>
-                  {sessionUser && (
-                    <button onClick={() => copyToClipboard(sessionUser.apiKey)} className="p-6 bg-white/5 hover:bg-white/10 border border-white/10 rounded-2xl transition">
-                      <Copy className="w-5 h-5 text-slate-300" />
-                    </button>
-                  )}
+            <div className="space-y-8">
+              <div>
+                <p className="text-[10px] font-black uppercase tracking-[0.3em] text-indigo-400 mb-4">Your Secret Key</p>
+                <div className="bg-slate-800 p-5 rounded-xl font-mono text-xs text-indigo-100 border border-white/5 truncate">
+                  {user ? user.apiKey : 'Login to view key'}
                 </div>
               </div>
 
-              {/* REQUEST FORMAT SECTION */}
-              <div className="space-y-4">
-                <p className="text-[10px] font-black uppercase tracking-[0.4em] text-indigo-400">API GET Request Structure</p>
-                <div className="relative group">
-                  <div className="bg-black/60 p-8 rounded-2xl border border-white/5 font-mono text-[11px] text-slate-300 leading-relaxed overflow-x-auto whitespace-nowrap scrollbar-hide">
-                    <span className="text-green-400 font-bold mr-3">GET</span> 
-                    {window.location.origin}{window.location.pathname.split('#')[0]}api?api=
-                    <span className="text-indigo-400 font-bold">{sessionUser ? sessionUser.apiKey : 'YOUR_TOKEN'}</span>
-                    &url=<span className="text-indigo-400 font-bold">TARGET_URL</span>
-                  </div>
+              <div>
+                <p className="text-[10px] font-black uppercase tracking-[0.3em] text-indigo-400 mb-4">Endpoint Usage</p>
+                <div className="bg-black/40 p-6 rounded-xl font-mono text-[11px] text-slate-400 leading-relaxed overflow-x-auto whitespace-nowrap">
+                  <span className="text-green-500">GET</span> {window.location.origin}{window.location.pathname}api?api=<span className="text-white">YOUR_KEY</span>&url=<span className="text-white">YOUR_URL</span>
                 </div>
               </div>
             </div>
 
             <button onClick={() => navigate('/')} className="w-full mt-12 text-slate-500 hover:text-white transition text-[10px] font-black uppercase tracking-[0.3em] flex items-center justify-center group">
-              <ChevronLeft className="w-4 h-4 mr-2 group-hover:-translate-x-1 transition-transform" /> Exit Developer Mode
+              <ChevronLeft className="w-4 h-4 mr-2 group-hover:-translate-x-1 transition-transform" /> Dashboard
             </button>
           </div>
         )}
@@ -177,16 +158,14 @@ const GlobalLayout: React.FC<GlobalLayoutProps> = ({ children, settings, current
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const location = useLocation();
   const isRedirectPage = location.pathname.startsWith('/s/');
-  const isApiPage = location.pathname === '/api';
 
   useEffect(() => { setIsMenuOpen(false); }, [location]);
 
-  // Hide nav/footer for Redirect and API pages for a clean developer/user experience
-  if (isRedirectPage || (isApiPage && location.search.includes('api='))) return <>{children}</>;
+  if (isRedirectPage) return <>{children}</>;
 
   return (
     <div className="flex flex-col min-h-screen bg-slate-50 font-sans">
-      <nav className="bg-white border-b border-slate-200 sticky top-0 z-[1000] shadow-sm">
+      <nav className="bg-white border-b border-slate-200 sticky top-0 z-[2000] shadow-sm">
         <div className="max-w-7xl mx-auto px-4 md:px-8">
           <div className="flex justify-between h-20">
             <div className="flex items-center">
@@ -198,8 +177,9 @@ const GlobalLayout: React.FC<GlobalLayoutProps> = ({ children, settings, current
               </RouterLink>
             </div>
             
+            {/* Desktop Nav */}
             <div className="hidden md:flex items-center space-x-10">
-              <RouterLink to="/" className="text-[11px] font-black text-slate-600 hover:text-indigo-600 uppercase tracking-[0.2em] transition">Shorten</RouterLink>
+              <RouterLink to="/" className="text-[11px] font-black text-slate-600 hover:text-indigo-600 uppercase tracking-[0.2em] transition">Home</RouterLink>
               <RouterLink to="/api" className="text-[11px] font-black text-slate-600 hover:text-indigo-600 uppercase tracking-[0.2em] transition">API</RouterLink>
               <RouterLink to="/blog" className="text-[11px] font-black text-slate-600 hover:text-indigo-600 uppercase tracking-[0.2em] transition">Blog</RouterLink>
               
@@ -213,17 +193,43 @@ const GlobalLayout: React.FC<GlobalLayoutProps> = ({ children, settings, current
               )}
             </div>
 
+            {/* Mobile Menu Toggle (Three Lines) */}
             <div className="md:hidden flex items-center">
-              <button onClick={() => setIsMenuOpen(!isMenuOpen)} className="text-slate-900 p-2 bg-slate-50 rounded-xl">
-                <Menu className="w-7 h-7" />
+              <button 
+                onClick={() => setIsMenuOpen(!isMenuOpen)} 
+                className="text-slate-900 p-3 bg-slate-50 hover:bg-slate-100 rounded-xl transition active:scale-95"
+              >
+                {isMenuOpen ? <X className="w-7 h-7" /> : <Menu className="w-7 h-7" />}
               </button>
             </div>
           </div>
         </div>
+
+        {/* Mobile Menu Content */}
+        {isMenuOpen && (
+          <div className="md:hidden absolute top-20 left-0 right-0 z-[1900] bg-white border-b border-slate-200 shadow-2xl p-6 space-y-4 animate-in">
+            <RouterLink to="/" className="block p-5 bg-slate-50 rounded-xl text-[12px] font-black uppercase tracking-widest text-slate-900">Home Station</RouterLink>
+            <RouterLink to="/api" className="block p-5 bg-slate-50 rounded-xl text-[12px] font-black uppercase tracking-widest text-slate-900">API Gateway</RouterLink>
+            <RouterLink to="/blog" className="block p-5 bg-slate-50 rounded-xl text-[12px] font-black uppercase tracking-widest text-slate-900">Insights</RouterLink>
+            <div className="pt-8 border-t border-slate-100 space-y-4">
+              {currentUser ? (
+                <>
+                  <RouterLink to={currentUser.role === UserRole.ADMIN ? "/admin" : "/dashboard"} className="block p-5 bg-slate-900 text-white text-center rounded-xl text-[12px] font-black uppercase tracking-widest">Dashboard Access</RouterLink>
+                  <button onClick={handleLogout} className="w-full p-5 text-center text-[12px] font-black text-red-500 uppercase tracking-widest">Sign Out</button>
+                </>
+              ) : (
+                <RouterLink to="/login" className="block p-5 bg-slate-900 text-white text-center rounded-xl text-[12px] font-black uppercase tracking-widest">Login Terminal</RouterLink>
+              )}
+            </div>
+          </div>
+        )}
       </nav>
-      <main className="flex-grow">{children}</main>
-      <footer className="bg-slate-900 py-12 px-4 text-center">
-         <p className="text-slate-600 text-[10px] font-black uppercase tracking-[0.5em]">© 2026 {settings.siteName} Hub.</p>
+
+      <main className="flex-grow relative">{children}</main>
+
+      <footer className="bg-slate-900 py-12 px-4 text-center border-t border-white/5">
+         <p className="text-slate-600 text-[10px] font-black uppercase tracking-[0.5em]">© 2026 {settings.siteName} Relay Network.</p>
+         <p className="text-slate-800 text-[8px] font-bold mt-4 uppercase tracking-widest">ID: 320f263d298979dc11826b8e2574610ba0cc5d6b</p>
       </footer>
     </div>
   );
